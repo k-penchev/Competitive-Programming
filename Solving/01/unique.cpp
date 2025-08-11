@@ -2,93 +2,84 @@
 
 using namespace std;
 
-const int MAXN = 1e6 + 2;
+const int MAXN = 1e6 + 5; 
 
-int n, q;
-
-struct Fenwick {
-    
-    int bit[MAXN];
-
-    void reset(){
-        for(int i = 0 ; i <= n ; i++){
-            bit[i] = 0;
-        }
-    }
-
-    void update(int idx, int val){
-        while(idx <= n){
-            bit[idx] += val;
-            idx += idx & (-idx);
-        }
-    }
-
-    int query(int idx){
-        int sum = 0;
-
-        while(idx > 0){
-            sum += bit[idx];
-            idx -= idx & (-idx);
-        }
-
-        return sum;
-    }
+struct Query {
+    int l, r, idx;
 };
 
-Fenwick tree;
-vector<int> nums, compressed;
-vector<bool> marked;
+int n, q;
+int a[MAXN], b[MAXN];
+pair<int, int> toCompress[MAXN];
+Query qs[MAXN];
+int freq[MAXN];
+long long cnt = 0;
+long long ans[MAXN];
 
-void compress(){
-    vector<int> sorted = nums;  
-    sort(sorted.begin(), sorted.end()); 
-    sorted.erase(unique(sorted.begin(), sorted.end()), sorted.end());  
+inline void add_pos(int p) {
+    int x = b[p];
+    if (++freq[x] == 1) ++cnt; 
+}
+inline void remove_pos(int p) {
+    int x = b[p];
+    if (--freq[x] == 0) --cnt; 
+}
 
-    compressed.resize(nums.size());
-    for (int i = 0; i < nums.size(); i++) {
-        compressed[i] = lower_bound(sorted.begin(), sorted.end(), nums[i]) - sorted.begin() + 1;
+void compress()
+{
+    sort(toCompress + 1, toCompress + n + 1);
+
+    int max_number = 0;
+
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        max_number += (toCompress[i].first != toCompress[i - 1].first);
+        b[toCompress[i].second] = max_number;
     }
 }
 
-void solve(){
-    cin >> n;
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
 
-    for(int i = 1 ; i <= n ; ++i){
-        int x; cin >> x;
-        nums.push_back(x);
+    cin >> n;
+    for (int i = 1; i <= n; ++i)
+    {
+        cin >> a[i];
+    }
+
+    for(int i = 1; i <= n; ++i)
+    {
+        toCompress[i] = {a[i], i};
     }
 
     compress();
 
-    marked.resize(compressed.size());
-
-    fill(marked.begin(), marked.end(), false);
-
-    for(int c : compressed){
-        if(!marked[c]){
-            tree.update(c, +1);
-            //cout << "marking " << c << endl;
-        }
-        marked[c] = true;
-    }
-    //cout << endl;
-    
     cin >> q;
-
-    while(q--){
-        int l, r; cin >> l >> r;
-        cout << tree.query(r) - tree.query(l - 1) << '\n';
+    for (int i = 1; i <= q; ++i) {
+        cin >> qs[i].l >> qs[i].r;
+        qs[i].idx = i;
     }
-    
-}
 
-void fastIO(){
-    ios :: sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
-}
+    int B = max(1, (int)sqrt(n));
+    sort(qs + 1, qs + q + 1, [&](const Query& A, const Query& Bq) {
+        int blA = A.l / B, blB = Bq.l / B;
+        if (blA != blB) return blA < blB;
+        return A.r < Bq.r;
+    });
 
-signed main(){
-    fastIO();
-    solve();
+    int curL = 1, curR = 0; 
+    for (int i = 1; i <= q; ++i) {
+        int L = qs[i].l, R = qs[i].r, id = qs[i].idx;
+        while (curL > L) add_pos(--curL);
+        while (curR < R) add_pos(++curR);
+        while (curL < L) remove_pos(curL++);
+        while (curR > R) remove_pos(curR--);
+        ans[id] = cnt; 
+    }
+
+    for (int i = 1; i <= q; ++i) {
+        cout << ans[i] << '\n';
+    }
+    return 0;
 }

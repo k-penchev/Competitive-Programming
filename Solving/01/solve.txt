@@ -1,0 +1,8 @@
+cut.cpp
+present.cpp
+dividers.cpp
+game.cpp
+
+xormass.cpp
+XOR segment tree
+Segment tree for graphs
