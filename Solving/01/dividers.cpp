@@ -5,7 +5,6 @@ using namespace std;
 #define int long long
 
 const int MAXN = 1e5 + 10;
-const int LOG = 17;
 
 int n, q;
 int a[MAXN];
@@ -23,61 +22,73 @@ struct Node
         cntDiv = 0;
         evenSum = oddSum = 0;
         maxPrefix = maxSuffix = 0;
-        ending = 0;
+        ending = false;
     }
 };
 
 struct SegmentTree
 {
-    Node tree[4 * MAXN];
+    Node seg[4 * MAXN];
 
-    Node combine(Node left, Node right, int mid_idx)
+    Node combine(Node left, Node right)
     {
-        if (left.cntDiv == -1) return right;
-        if (right.cntDiv == -1) return left;
+        if(left.cntDiv == -1) return right;
+        if(right.cntDiv == -1) return left;
 
         Node res;
 
+        bool hasBorder = left.ending;
+
         res.cntDiv = left.cntDiv + right.cntDiv;
+        res.ending = right.ending;
 
-        //pref, suff
 
-        if(!d[mid_idx] && left.cntDiv == 0) res.maxPrefix = max(left.maxPrefix, right.maxPrefix);
-        else res.maxPrefix = left.maxPrefix;
-
-        if(!d[mid_idx] && right.cntDiv == 0) res.maxSuffix = max(left.maxSuffix, right.maxSuffix);
-        else res.maxSuffix = right.maxSuffix;
-
-        bool cut = d[mid_idx];
-
-        if (cut)
+        if(hasBorder)
         {
-            if (left.cntDiv & 1)
+            
+            if(left.cntDiv % 2 == 1)
             {
-                res.oddSum  = left.oddSum  + right.evenSum;
+                res.evenSum = left.evenSum + right.oddSum;
+                res.oddSum = left.oddSum + right.evenSum;
+            }
+            else
+            {
+                res.evenSum = left.evenSum + right.evenSum;
+                res.oddSum = left.oddSum + right.oddSum;
+            }
+
+            res.maxPrefix = left.maxPrefix;
+            res.maxSuffix = right.maxSuffix;
+        }
+        else
+        {
+            if (left.cntDiv % 2 == 1)
+            {
+                res.oddSum = left.oddSum + right.evenSum - left.maxSuffix - right.maxPrefix + std::max(left.maxSuffix, right.maxPrefix);
                 res.evenSum = left.evenSum + right.oddSum;
             }
             else
             {
-                res.oddSum  = left.oddSum  + right.oddSum;
-                res.evenSum = left.evenSum + right.evenSum;
+                res.oddSum = left.oddSum + right.oddSum;
+                res.evenSum = left.evenSum + right.evenSum - left.maxSuffix - right.maxPrefix + std::max(left.maxSuffix, right.maxPrefix);
             }
-        }
-        else
-        {
-            if (left.cntDiv & 1)
-            {
-                res.oddSum  = left.oddSum  + right.evenSum - left.maxSuffix - right.maxPrefix + max(left.maxSuffix, right.maxPrefix); // repair here
-                res.evenSum = left.evenSum + right.oddSum;                 // no repair
-            } else
-            {
-                res.oddSum  = left.oddSum  + right.oddSum;                 // no repair
-                res.evenSum = left.evenSum + right.evenSum - left.maxSuffix - right.maxPrefix + max(left.maxSuffix, right.maxPrefix);  // repair here
-            }
-        }
 
-        res.ending = right.ending;
-        
+            res.maxPrefix = left.maxPrefix;
+
+            if(left.cntDiv == 0)
+            {
+                res.maxPrefix = max(res.maxPrefix, right.maxPrefix);
+            }
+
+            res.maxSuffix = right.maxSuffix;
+
+            if(right.cntDiv == 0)
+            {
+                res.maxSuffix = max(res.maxSuffix, left.maxSuffix);
+            }
+        }
+    
+
         return res;
     }
 
@@ -86,18 +97,29 @@ struct SegmentTree
         if(low == high)
         {
             a[low] += val;
-            tree[idx].cntDiv = d[low];
 
-            tree[idx].evenSum = a[low];
-            tree[idx].maxPrefix = a[low];
+            Node new_node;
 
-            tree[idx].oddSum = 0;
-            tree[idx].maxSuffix = ( (d[low]) ? 0 : a[low]);
+            new_node.cntDiv = d[low];
+
+            if(new_node.cntDiv == 0)
+            {
+                new_node.maxSuffix = a[low];
+            }
+            else
+            {
+                new_node.maxSuffix = 0;
+            }
+
+
+            new_node.evenSum = new_node.maxPrefix = a[low];
+            new_node.oddSum = 0;
+            new_node.ending = d[low];
+
+
+            seg[idx] = new_node;
             
-            tree[idx].ending = d[low];
-
             return;
-
         }
 
         int mid = (low + high) / 2;
@@ -113,41 +135,56 @@ struct SegmentTree
             update(right, mid + 1, high, pos, val);
         }
 
-        tree[idx] = combine(tree[left], tree[right], mid);
+        seg[idx] = combine(seg[left], seg[right]);
     }
 
-    Node query(int idx, int low, int high, int L, int R) {
-        if (R < low || high < L) { Node z; z.cntDiv = -1; return z; } // empty
-        if (L <= low && high <= R) return tree[idx];
-        int mid = (low+high)/2;
-        Node le = query(idx*2, low, mid, L, R);
-        Node ri = query(idx*2+1, mid+1, high, L, R);
-        if (le.cntDiv == -1) return ri;
-        if (ri.cntDiv == -1) return le;
-        return combine(le, ri, mid);
+    void update(int pos, int val)
+    {
+        update(1, 1, n, pos, val);
     }
 
+    Node query(int idx, int low, int high, int queryL, int queryR)
+    {
+        if(queryL > high || queryR < low)
+        {
+            Node res; res.cntDiv = -1;
+            return res;
+        }
+        else if(queryL <= low && high <= queryR)
+        {
+            return seg[idx];
+        }
+
+        int mid = (low + high) / 2;
+        int left = 2 * idx;
+        int right = 2 * idx + 1;
+
+        Node le, ri;
+        
+        le = query(left, low, mid, queryL, queryR);
+        ri = query(right, mid + 1, high, queryL, queryR);
+        
+        return combine(le, ri);
+    }
+
+    pair<int, int> query(int l, int r)
+    {
+        Node result;
+        result = query(1, 1, n, l, r);
+        
+        return {result.evenSum, result.oddSum};
+    }
 };
 
 struct Fenwick
 {
-    
     int bit[MAXN];
-
-    void set()
-    {
-        for(int i = 0 ; i <= n ; i++)
-        {
-            bit[i] = 0;
-        }
-    }
 
     void update(int idx, int val)
     {
-        while(idx <= n)
+        for(; idx <= n ; idx += (idx & (-idx)))
         {
             bit[idx] += val;
-            idx += idx & (-idx);
         }
     }
 
@@ -155,26 +192,21 @@ struct Fenwick
     {
         int sum = 0;
 
-        while(idx >= 1)
+        for(; idx >= 1 ; idx -= (idx & (-idx)))
         {
             sum += bit[idx];
-            idx -= idx & (-idx);
         }
 
         return sum;
     }
 };
 
-
-Fenwick fen;
 SegmentTree seg;
-
+Fenwick fen;
 
 void solve()
 {
     cin >> n >> q;
-
-    fen.set();
 
     int qType, x, y;
 
@@ -185,74 +217,48 @@ void solve()
         if(qType == 1)
         {
             cin >> x;
-            d[x] = 1;
+            d[x] = true;
+
             fen.update(x, +1);
-            seg.update(1, 1, n, x, 0);
-            
+            seg.update(x, 0);
+
         }
         else if(qType == 2)
         {
             cin >> x;
-            d[x] = 0;
+            d[x] = false;
+
             fen.update(x, -1);
-            seg.update(1, 1, n, x, 0);
+            seg.update(x, 0);
+
         }
         else if(qType == 3)
         {
             cin >> x >> y;
-            seg.update(1, 1, n, x, y);
+
+            seg.update(x, y);
         }
         else
         {
             cin >> x >> y;
-            
+
             int parity = fen.query(x - 1);
-            
-            if(parity % 2 == 1)
+
+            if(parity % 2 == 1) 
             {
-                cout << seg.query(1, 1, n, x, y).oddSum << "\n";
+                cout << seg.query(x, y).first << "\n";   // evenSum
             }
             else
             {
-                cout << seg.query(1, 1, n, x, y).evenSum << "\n";
+                cout << seg.query(x, y).second << "\n";  // oddSum
             }
-            
         }
     }
 }
 
-/*
-
-
-10 20
-1 4
-3 3 7
-3 4 1
-3 5 8
-3 6 5
-4 3 6
-1 1
-4 3 6
-3 10 3
-3 9 2
-3 8 9
-1 8
-4 1 10
-4 4 9
-3 9 8
-1 7
-3 2 6
-4 2 9
-2 1
-4 2 9
-
-
-*/
-
-
 void fastIO()
 {
-    ios_base::sync_with_stdio(false);
+    ios_base :: sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
 }
@@ -261,6 +267,6 @@ signed main()
 {
     fastIO();
     solve();
-    
+
     return 0;
 }

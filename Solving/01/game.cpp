@@ -12,6 +12,60 @@ const int INF = 1e9;
 int n, k, q;
 int a[MAXN], length[MAXN], idx[MAXN];
 
+struct SegmentTree
+{
+    int tree[4 * MAXN];
+
+    void build(int idx, int low, int high, int arr[])
+    {
+        if(low == high)
+        {
+            tree[idx] = arr[low];
+            return;
+        }
+
+        int mid = (low + high) / 2;
+        int left = 2 * idx;
+        int right = 2 * idx + 1;
+        
+        build(left, low, mid, arr);
+        build(right, mid + 1, high, arr);
+
+        tree[idx] = max(tree[left], tree[right]);
+    }
+
+    void build(int arr[])
+    {
+        build(1, 1, n, arr);
+    }
+
+    int query(int idx, int low, int high, int queryL, int queryR)
+    {
+        if(queryL > high || queryR < low)
+        {
+            return INT_MIN;
+        }
+        else if(queryL <= low && high <= queryR)
+        {
+            return tree[idx];
+        }
+
+        int mid = (low + high) / 2;
+        int left = 2 * idx;
+        int right = 2 * idx + 1;
+
+        int le = query(left, low, mid, queryL, queryR);
+        int ri = query(right, mid + 1, high, queryL, queryR);
+
+        return max(le, ri);
+    }
+
+    int query(int l, int r)
+    {
+        return query(1, 1, n, l, r);
+    }
+};
+
 struct Sparse
 {
     int table[MAXN][LOG];
@@ -35,13 +89,10 @@ struct Sparse
         {
             for(int i = 0 ; i + (1 << j) - 1 < n ; ++i)
             {
-                if(type == 1)
+                if(type == 0)
                     table[i][j] = gcd(table[i][j - 1], table[i + (1 << (j - 1))][j - 1]);
-                else if(type == 2)
-                    table[i][j] = max(table[i][j - 1], table[i + (1 << (j - 1))][j - 1]);
                 else
                     table[i][j] = min(table[i][j - 1], table[i + (1 << (j - 1))][j - 1]);
-            
             }
         }
     }
@@ -50,17 +101,16 @@ struct Sparse
     {
         --l, --r;
         int k = lg[r - l + 1];
-        
-        if(type == 1)
+
+        if(type == 0)
             return gcd(table[l][k], table[r - (1 << k) + 1][k]);
-        else if(type == 2)
-            return max(table[l][k], table[r - (1 << k) + 1][k]);
         else
             return min(table[l][k], table[r - (1 << k) + 1][k]);
     }
 };
 
-Sparse table_gcd, table_max, table_min;
+Sparse table_gcd, table_min;
+SegmentTree seg_max;
 
 int binary1(int l, int r)
 {
@@ -70,7 +120,7 @@ int binary1(int l, int r)
     {
         int mid = (lPtr + rPtr) / 2;
 
-        if(table_gcd.query(mid, r, 1) >= k)
+        if(table_gcd.query(mid, r, 0) >= k)
         {
             rPtr = mid;
         }
@@ -85,8 +135,7 @@ int binary1(int l, int r)
 
 void precompute()
 {
-    table_gcd.build(a, 1);
-    
+    table_gcd.build(a, 0);
 
     for(int i = 1 ; i <= n ; ++i)
     {
@@ -96,10 +145,9 @@ void precompute()
         idx[i] = i - length[i] + 1;
     }
 
-    table_max.build(length, 2);
-    table_min.build(idx, 3);
+    seg_max.build(length);
+    table_min.build(idx, 1);
 }
-
 
 int binary2(int l, int r)
 {
@@ -109,13 +157,13 @@ int binary2(int l, int r)
     {
         int mid = (lPtr + rPtr) / 2;
 
-        if(table_min.query(mid, r, 3) <= l)
+        if(table_min.query(mid, r, 1) > l)
         {
-            lPtr = mid;
+            rPtr = mid;
         }
         else
         {
-            rPtr = mid;
+            lPtr = mid;
         }
     }
 
@@ -130,9 +178,8 @@ int compute(int l, int r)
     }
 
     int x = binary2(l, r);
-    int max_length = table_max.query(x + 1, r, 2);
     
-    return max(max_length, x - l + 1);
+    return max(x - l + 1, seg_max.query(x + 1, r));
 }
 
 void solve()
@@ -144,6 +191,7 @@ void solve()
         cin >> a[i];
     }
 
+    
     precompute();
     
     cin >> q;
