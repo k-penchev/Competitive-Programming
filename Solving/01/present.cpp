@@ -3,12 +3,11 @@
 using namespace std;
 
 const int MAXN = 350000 + 10;
-const int LOG = 17;
+const int MAX_LOG = 19;
 
 int n;
 vector<int> v;
 
-/*
 struct Fenwick
 {
     
@@ -31,63 +30,71 @@ struct Fenwick
         }
     }
 
-    int query(int idx)
+    int find_kth(int val)
     {
+        int pos = 0;
         int sum = 0;
 
-        while(idx >= 1)
+        for(int lg = MAX_LOG; lg >= 0; --lg)
         {
-            sum += bit[idx];
-            idx -= idx & (-idx);
+            int next = 1 << lg;
+
+            if(pos + next <= n && sum + bit[pos + next] < val)
+            {
+                sum += bit[pos + next];
+                pos += next;
+            }
         }
 
-        return sum;
+        return pos + 1;
     }
 };
 
 
-Fenwick fen;
-*/
+Fenwick tree;
 
 int question (int x, int k);
 
-/*int binary(int l, int r)
+int binary(int m)
 {
-    int lPtr = l - 1, rPtr = r + 1;
+    int lPtr = 0, rPtr = m;
 
     while (rPtr > lPtr + 1)
     {
         int mid = (lPtr + rPtr) / 2;
 
-        if(question())
-        {
+        int kth_first = tree.find_kth(mid);
+        int kth_second = question(m, mid);
 
+        if(kth_first == kth_second)
+        {
+            lPtr = mid;
+        }
+        else
+        {
+            rPtr = mid;
         }
     }
-    
+
+    return rPtr;
 }
-*/
+
 
 std::vector <int> solve (int N)
 {
     n = N;
 
+    tree.set();
+
     for(int i = 1 ; i <= n ; ++i)
     {
-        for(int j = 1 ; j <= i ; ++j)
-        {
-            int number = question(i, j);
+        int idx = binary(i);
+        //cout << "idx : " << idx << "\n";
+        int number = question(i, idx);
 
-            if(find(v.begin(), v.end(), number) != v.end())
-            {
-                continue;
-            }
-            else
-            {
-                v.push_back(number);
-                break;
-            }
-        }
+        v.push_back(number);
+
+        tree.update(number, +1);
     }
 
     return v;
