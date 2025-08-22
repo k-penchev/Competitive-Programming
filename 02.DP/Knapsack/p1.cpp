@@ -2,32 +2,31 @@
 
 using namespace std;
 
-const int MAXN = 1e5;
+const int MAXN = 1e2 + 10;
 
-int n, t;
+int N, W;
 int w[MAXN], v[MAXN];
 
 void solve()
 {
-    cin >> n >> t;
+    cin >> N >> W;
 
-    vector<int> dp(t + 1, 0);
-
-    for(int i = 1 ; i <= n ; ++i)
+    for(int i = 0 ; i < N ; ++i)
     {
         cin >> w[i] >> v[i];
     }
 
-    for(int i = 1 ; i <= n ; ++i)
+    vector<int> dp(W + 1, 0);
+
+    for(int i = 0 ; i < N ; ++i)
     {
-        for(int j = w[i] ; j <= t ; ++j)
+        for(int j = W ; j >= w[i] ; --j)
         {
             dp[j] = max(dp[j], dp[j - w[i]] + v[i]);
         }
     }
 
-
-    cout << dp[t] << "\n";
+    cout << dp[W] << "\n";
 }
 
 void fastIO()

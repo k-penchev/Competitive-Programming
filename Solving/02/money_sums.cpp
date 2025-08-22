@@ -2,33 +2,38 @@
 
 using namespace std;
 
-const int MAXN = 1e2 + 10;
-const int MAXS = 1e5 + 10;
+const int MAXN = 1e2;
+const int MAXI = 1e3;
+const int MAXS = MAXN * MAXI + 1;
 
 int n;
-vector<int> coins, answer;
-bool dp[MAXN * MAXS];
+vector<int> answer;
 
 void solve()
 {
     cin >> n;
 
+    vector<bool> dp(MAXS, 0);
+
     dp[0] = true;
+
+    int coin;
 
     for(int i = 0 ; i < n ; ++i)
     {
-        int c; cin >> c;
-        for(int sum = MAXS ; sum >= 0 ; --sum)
+        cin >> coin;
+
+        for(int j = MAXS ; j >= 0 ; --j)
         {
-            if(dp[sum])
+            if(dp[j])
             {
-                dp[sum + c] = true;
+                dp[j + coin] = true;
             }
         }
-
     }
 
-    for(int i = 1 ; i < MAXN * MAXS ; ++i)
+    
+    for(int i = 1 ; i <= MAXS ; ++i)
     {
         if(dp[i])
         {
@@ -37,13 +42,13 @@ void solve()
     }
     
     cout << answer.size() << "\n";
-
+ 
     for(int a : answer)
     {
         cout << a << " ";
     }
+ 
 
-    cout << "\n";
 }
 
 void fastIO()

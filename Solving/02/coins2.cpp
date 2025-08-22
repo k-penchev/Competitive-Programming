@@ -2,12 +2,10 @@
 
 using namespace std;
 
-const int MAXN = 1e6 + 10;
 const int MOD = 1e9 + 7;
 
 int n, x;
-vector<int> coin;
-int dp[MAXN];
+vector<int> coins;
 
 void solve()
 {
@@ -15,15 +13,17 @@ void solve()
 
     for(int i = 0 ; i < n ; ++i)
     {
-        int c; cin >> c;
-        coin.push_back(c);
+        int coin; cin >> coin;
+        coins.push_back(coin);
     }
+
+    vector<int> dp(x + 1, 0);
 
     dp[0] = 1;
 
-    for(int c : coin)
+    for(int s = 0 ; s < x ; ++s)
     {
-        for(int s = 0 ; s < x ; ++s)
+        for(int c : coins)
         {
             if(s + c <= x)
             {
