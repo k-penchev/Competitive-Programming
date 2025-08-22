@@ -2,43 +2,85 @@
 
 using namespace std;
 
-const int INF = 1e9;
+const int INF = 2e9;
 
-string x, y;
+int H, G;
+
+struct Cow
+{
+    int x, y;
+};
+
+
+int dist(Cow& p1, Cow& p2)
+{
+    int f = abs(p1.x - p2.x);
+    int s = abs(p1.y - p2.y);
+
+    return f * f + s * s;
+}
 
 void solve()
 {
-    cin >> x >> y;
+    freopen("checklist.in", "r", stdin);
+    freopen("checklist.out", "w", stdout);
 
-    int A = x.size();
-    int B = y.size();
+    cin >> H >> G;
 
-    vector<vector<int>> dp(A + 1, vector<int>(B + 1, INF));
+    vector<Cow> h(H + 1), g(G + 1);
 
-    dp[0][0] = 0;
+    int x, y;
 
-    for(int i = 0 ; i <= A ; ++i)
+    for(int i = 1 ; i <= H ; ++i)
     {
-        for(int j = 0 ; j <= B ; ++j)
+        cin >> x >> y;
+        h[i] = {x, y};
+    }
+
+    for(int i = 1 ; i <= G ; ++i)
+    {
+        cin >> x >> y;
+        g[i] = {x, y};
+    }
+
+    int dp[1001][1001][2];
+
+
+    for(int i = 0 ; i <= 1000; ++i)
+    {
+        for(int j = 0 ; j <= 1000 ; ++j)
         {
-            if(i != 0)
+            dp[i][j][0] = dp[i][j][1] = INF;
+        }
+    }
+
+
+    dp[1][0][0] = 0;
+
+    dp[1][1][1] = dist(h[1], g[1]);
+
+    for(int i = 0 ; i < H + 1 ; ++i)
+    {
+        for(int j = 0 ; j < G + 1 ; ++j)
+        {
+            if(i == 1 && j == 0 || i == 1 && j == 1)
             {
-                dp[i][j] = min(dp[i][j], dp[i - 1][j] + 1);
+                continue;
             }
 
-            if(j != 0)
+            if(i > 0)
             {
-                dp[i][j] = min(dp[i][j], dp[i][j - 1] + 1);
+                dp[i][j][0] = min(dp[i - 1][j][0] + dist(h[i - 1], h[i]), dp[i - 1][j][1] + dist(g[j], h[i]));
             }
 
-            if(i != 0 && j != 0)
+            if(j > 0)
             {
-                dp[i][j] = min(dp[i][j], dp[i - 1][j - 1] + (x[i - 1] != y[j - 1]));
+                dp[i][j][1] = min(dp[i][j - 1][1] + dist(g[j - 1], g[j]), dp[i][j - 1][0] + dist(g[j], h[i])); 
             }
         }
     }
 
-    cout << dp[A][B] << "\n";
+    cout << dp[H][G][0] << "\n";
 }
 
 void fastIO()

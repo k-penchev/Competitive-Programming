@@ -2,17 +2,74 @@
 
 using namespace std;
 
-const int INF = 2e9;
+const int MAXN = 1000 + 5;
+const int INF = 2e9 + 5;
 
-int H, G;
+int N, M;
 
-struct Cow
+struct Point
 {
-    int x, y;
+    int x;
+    int y;
 };
 
+vector<Point> farmer, cow;
+string farmer_dir, cow_dir;
+int dp[MAXN][MAXN];
 
-int dist(Cow& p1, Cow& p2)
+void precompute()
+{
+    
+    for(int i = 1 ; i <= farmer_dir.size(); ++i)
+    {
+        char dir = farmer_dir[i - 1];
+
+        if(dir == 'N') 
+        {
+            farmer[i] = {farmer[i - 1].x, farmer[i - 1].y + 1};
+        }
+        else if(dir == 'E')
+        {
+            farmer[i] = {farmer[i - 1].x + 1, farmer[i - 1].y};
+        }
+        else if(dir == 'S') 
+        {
+            farmer[i] = {farmer[i - 1].x, farmer[i - 1].y - 1};
+        }
+        else 
+        {
+            farmer[i] = {farmer[i - 1].x - 1, farmer[i - 1].y};
+        }
+
+    }
+
+
+    for(int i = 1 ; i <= cow_dir.size(); ++i)
+    {
+        char dir = cow_dir[i - 1];
+
+        if(dir == 'N') 
+        {
+            cow[i] = {cow[i - 1].x, cow[i - 1].y + 1};
+        }
+        else if(dir == 'E') 
+        {
+            cow[i] = {cow[i - 1].x + 1, cow[i - 1].y};
+        }
+        else if(dir == 'S') 
+        {
+            cow[i] = {cow[i - 1].x, cow[i - 1].y - 1};
+        }
+        else 
+        {
+            cow[i] = {cow[i - 1].x - 1, cow[i - 1].y};
+        }
+
+    }
+
+}
+
+int dist(Point& p1, Point& p2)
 {
     int f = abs(p1.x - p2.x);
     int s = abs(p1.y - p2.y);
@@ -22,65 +79,60 @@ int dist(Cow& p1, Cow& p2)
 
 void solve()
 {
-    freopen("checklist.in", "r", stdin);
-    freopen("checklist.out", "w", stdout);
+    precompute();
 
-    cin >> H >> G;
-
-    vector<Cow> h(H + 1), g(G + 1);
-
-    int x, y;
-
-    for(int i = 1 ; i <= H ; ++i)
+    for (int i = 0; i <= N; ++i)
     {
-        cin >> x >> y;
-        h[i] = {x, y};
-    }
-
-    for(int i = 1 ; i <= G ; ++i)
-    {
-        cin >> x >> y;
-        g[i] = {x, y};
-    }
-
-    int dp[1001][1001][2];
-
-
-    for(int i = 0 ; i <= 1000; ++i)
-    {
-        for(int j = 0 ; j <= 1000 ; ++j)
+        for (int j = 0; j <= M; ++j)
         {
-            dp[i][j][0] = dp[i][j][1] = INF;
+            dp[i][j] = INF;
+        }
+    }
+        
+    dp[0][0] = 0;
+
+    // Base: only FJ moves; Bessie stays
+    for (int i = 1; i <= N; ++i)
+    {
+        
+        dp[i][0] = dp[i - 1][0] + dist(farmer[i], cow[0]);
+    }
+
+    // Base: only Bessie moves; FJ stays
+    for (int j = 1; j <= M; ++j)
+    {
+        
+        dp[0][j] = dp[0][j - 1] + dist(farmer[0], cow[j]);
+    }
+
+    for (int i = 1; i <= N; ++i)
+    {
+        for (int j = 1; j <= M; ++j)
+        {
+            int best = min({dp[i - 1][j - 1],  // both advance
+                           dp[i - 1][j],    // only FJ advances
+                           dp[i][j - 1]});  // only Bessie advances
+            dp[i][j] = best + dist(farmer[i], cow[j]);
         }
     }
 
+    cout << dp[N][M] << "\n";
+}
 
-    dp[1][0][0] = 0;
+void input()
+{
+    freopen("radio.in", "r", stdin);
+    freopen("radio.out", "w", stdout);
 
-    dp[1][1][1] = dist(h[1], g[1]);
+    cin >> N >> M;
 
-    for(int i = 0 ; i < H + 1 ; ++i)
-    {
-        for(int j = 0 ; j < G + 1 ; ++j)
-        {
-            if(i == 1 && j == 0 || i == 1 && j == 1)
-            {
-                continue;
-            }
+    farmer.resize(N + 1);
+    cow.resize(M + 1);
 
-            if(i > 0)
-            {
-                dp[i][j][0] = min(dp[i - 1][j][0] + dist(h[i - 1], h[i]), dp[i - 1][j][1] + dist(g[j], h[i]));
-            }
+    cin >> farmer[0].x >> farmer[0].y;
+    cin >> cow[0].x >> cow[0].y;
 
-            if(j > 0)
-            {
-                dp[i][j][1] = min(dp[i][j - 1][1] + dist(g[j - 1], g[j]), dp[i][j - 1][0] + dist(g[j], h[i])); 
-            }
-        }
-    }
-
-    cout << dp[H][G][0] << "\n";
+    cin >> farmer_dir >> cow_dir;
 }
 
 void fastIO()
@@ -93,5 +145,6 @@ void fastIO()
 int main()
 {
     fastIO();
+    input();
     solve();
 }
