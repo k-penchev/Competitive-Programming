@@ -1,18 +1,23 @@
 #include <bits/stdc++.h>
 
-#define int long long
-
 using namespace std;
 
-const int MAXN = 2 * 1e5 + 10;
+const int MAXN = 1e6 + 10;
 const int INF = 1e9;
 
 int n;
-int a[MAXN];
-int dp[MAXN];
-int answer = 0;
 
-int upper_binary_search(int x)
+struct Line
+{
+    int x;
+    int y;
+};
+
+Line a[MAXN];
+int sorted[MAXN];
+int dp[MAXN];
+
+int binary(int x)
 {
     int lPtr = -1, rPtr = n;
 
@@ -20,7 +25,7 @@ int upper_binary_search(int x)
     {
         int mid = (lPtr + rPtr) / 2;
 
-        if(dp[mid] > x)
+        if(dp[mid] >= x)
         {
             rPtr = mid;
         }
@@ -33,43 +38,56 @@ int upper_binary_search(int x)
     return rPtr;
 }
 
-int LongestNonDecresing()
-{
-    for(int i = 0 ; i <= n ; ++i)
-    {
-        dp[i] = INF;
-    }
-
-    dp[0] = -INF;
-    
-    for(int i = 0 ; i < n ; ++i)
-    {
-        int l = upper_binary_search(a[i]);
-
-        dp[l] = a[i];
-    }
-
-    for(int i = 0 ; i <= n ; ++i)
-    {
-        if(dp[i] < INF)
-        {
-            answer = i;
-        }
-    }
-
-    return answer;
-}
-
 void solve()
 {
     cin >> n;
 
     for(int i = 0 ; i < n ; ++i)
     {
-        cin >> a[i];
+        cin >> a[i].x;
     }
 
-    cout << LongestNonDecresing() << "\n";
+    for(int i = 0 ; i < n ; ++i)
+    {
+        cin >> a[i].y;
+    }
+
+    sort(a, a + n, [&](const Line& l1, const Line& l2)
+    {
+        return l1.x < l2.x;
+    });
+
+    iota(sorted, sorted + n, 0);
+    sort(sorted, sorted + n, [&](int x, int y)
+    {
+        return a[x].y < a[y].y;
+    });
+
+    for(int i = 0 ; i <= n ; ++i)
+    {
+        dp[i] = INF;
+    }
+
+    dp[0] = -INF;
+
+    for(int i = 0 ; i < n ; ++i)
+    {
+        int l = binary(sorted[i]);
+
+        dp[l] = sorted[i];
+    }
+
+    int lis = 0;
+
+    for(int i = 0 ; i <= n ; ++i)
+    {
+        if(dp[i] < INF)
+        {
+            lis = i;
+        }
+    }
+
+    cout << lis << "\n";
 }
 
 void fastIO()
@@ -79,7 +97,7 @@ void fastIO()
     cout.tie(NULL);
 }
 
-signed main()
+int main()
 {
     fastIO();
     solve();
