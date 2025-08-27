@@ -7,13 +7,9 @@ void iterate_everything(int maxElement)
 {
     for(int mask = 0 ; mask < (1 << maxElement) ; ++mask)
     {
-        //process subset (s1) under "mask"
-
         for(int submask = mask ; submask != 0 ; submask = (submask - 1) & mask)
         {
-            //process strict subset(s2) of (s1) under "submask"
-
-            int strict_subset = mask ^ submask;
+            int subset = mask ^ submask;
         }
     }
 }
