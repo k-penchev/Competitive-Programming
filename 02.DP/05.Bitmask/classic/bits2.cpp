@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void to_binary(int num)
+void print_in_binary(int num)
 {
     for(int bit = 31 ; bit >= 0 ; --bit)
     {
@@ -27,7 +27,7 @@ void solve()
     cout << (x << k) << "\n"; // the same as x * (2^k)
     cout << (x >> k) << "\n"; // the same as floor( x / (2^k) )
 
-    to_binary(5);
+    print_in_binary(5);
 
     /*
     
@@ -60,8 +60,8 @@ void solve()
     cout << __builtin_popcount(x) << "\n"; // 5
     cout << __builtin_parity(x) << "\n"; // 1
 
-    to_binary((1 << 30));
-    to_binary((1 << 30) - 1);
+    print_in_binary((1 << 30));
+    print_in_binary((1 << 30) - 1);
 
     /*subset = (subset - 1) & mask
 
@@ -72,7 +72,7 @@ void solve()
 
     for (int subset = set; ; subset = (subset - 1) & set)
     {
-        to_binary(subset);
+        print_in_binary(subset);
 
         if (subset == 0) break;
     }
@@ -84,7 +84,7 @@ void solve()
 
     do
     {
-        to_binary(subset);
+        print_in_binary(subset);
     }
     while(subset = (subset - set) & set);
 
