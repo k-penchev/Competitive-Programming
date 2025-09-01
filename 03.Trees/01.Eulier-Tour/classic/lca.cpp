@@ -9,45 +9,48 @@ const int MAXLOG = 20;
 
 int n, q;
 vector<vector<int>> tree(MAXN);
-int in[MAXN], depth[MAXN], tour[2 * MAXN];
+int timer = 1;
+int in[MAXN], tour[2 * MAXN];
+int depth[MAXN];
 
 struct Sparse
 {
     int sparse[2 * MAXN][MAXLOG];
     int lg[2 * MAXN];
 
-    void build(int arr[], int size)
+    void build(int arr[], int m)
     {
         lg[1] = 0;
-        for(int i = 2 ; i <= size ; ++i) lg[i] = lg[i / 2] + 1;
+        for (int i = 2; i <= m; ++i) lg[i] = lg[i / 2] + 1;
 
-        for(int i = 1 ; i <= size ; ++i) sparse[i][0] = arr[i];
+        
+        for (int i = 1; i <= m; ++i) sparse[i][0] = arr[i];
 
-        for(int j = 1 ; (1 << j) <= size ; ++j)
+        for (int j = 1; (1 << j) <= m; ++j)
         {
-            for(int i = 1 ; i + (1 << j) - 1 <= size ; ++i)
+            for (int i = 1; i + (1 << j) - 1 <= m; ++i)
             {
                 int L = sparse[i][j - 1];
                 int R = sparse[i + (1 << (j - 1))][j - 1];
-
-                sparse[i][j] = (depth[L] < depth[R] ? L : R);
+                sparse[i][j] = (depth[L] < depth[R] ? L : R); 
             }
         }
     }
 
     int query(int l, int r)
-    {
-        int k = lg[r - l + 1];
+    { 
+        if (l > r) swap(l, r);
         
+        int k = lg[r - l + 1];
         int L = sparse[l][k];
         int R = sparse[r - (1 << k) + 1][k];
-
+        
         return (depth[L] < depth[R] ? L : R);
     }
 };
 
+
 Sparse table;
-int timer = 1;
 
 void build_euler(int node, int par, int currentDepth)
 {
@@ -56,42 +59,41 @@ void build_euler(int node, int par, int currentDepth)
 
     tour[timer++] = node;
 
-    for(int& to : tree[node])
+    for(const int& to : tree[node])
     {
         if(to == par) continue;
-        
+
         build_euler(to, node, currentDepth + 1);
         tour[timer++] = node;
     }
+
 }
 
-int distance(int a, int b)
+int lca(int a, int b)
 {
     if(in[a] > in[b]) swap(a, b);
-
-    int lca = table.query(in[a], in[b]);
-    return depth[a] + depth[b] - 2 * depth[lca];
+    return table.query(in[a], in[b]);
 }
 
 void solve()
 {
     cin >> n >> q;
 
-    for(int i = 1 ; i <= n - 1 ; ++i)
+    for(int i = 2 ; i <= n ; ++i)
     {
-        int a, b; cin >> a >> b;
+        int parent; cin >> parent;
 
-        tree[a].push_back(b);
-        tree[b].push_back(a);
+        tree[parent].push_back(i);
+        tree[i].push_back(parent);
     }
 
-    build_euler(1, 0, 1);
+    build_euler(1, 0, 0);
     table.build(tour, 2 * n - 1);
 
     for(int qq = 1 ; qq <= q ; ++qq)
     {
         int a, b; cin >> a >> b;
-        cout << distance(a, b) << "\n";
+        cout << lca(a, b) << "\n";
     }
 }
 

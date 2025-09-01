@@ -172,7 +172,7 @@ void solve()
         tree[b].push_back(a);
     }
 
-    build_euler(1, 0, 1);;
+    build_euler(1, 0, 0);;
 
     for(int i = 1 ; i <= n ; ++i)
     {
