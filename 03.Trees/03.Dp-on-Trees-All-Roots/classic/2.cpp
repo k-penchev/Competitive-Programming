@@ -2,56 +2,55 @@
 
 using namespace std;
 
-#define int long long
+const int MAXN = 1e5 + 10;
 
-const int MAXN = 50000 + 5;
-const int MAXK = 500 + 5;
-
-int n, k;
+int n;
 vector<vector<int>> tree(MAXN);
-int dp[MAXN][MAXK];
-int ans = 0;
+int best1[MAXN], best2[MAXN];
 
 void dfs(int node, int par)
 {
-    dp[node][0] = 1;
-    
     for(const int& to : tree[node])
     {
         if(to == par) continue;
 
         dfs(to, node);
 
+        int candidate = 1 + best1[to];
 
-        for(int d = 1 ; d <= k ; ++d)
+        if(candidate > best1[node])
         {
-            ans += dp[node][k - d] * dp[to][d - 1];
+            best2[node] = best1[node];
+            best1[node] = candidate;
         }
-
-
-        for(int d = 1 ; d <= k ; ++d)
+        else if(candidate > best2[node])
         {
-            dp[node][d] += dp[to][d - 1];
+            best2[node] = candidate;
         }
     }
 }
 
 void solve()
 {
-
-    cin >> n >> k;
+    cin >> n;
 
     for(int i = 1 ; i <= n - 1 ; ++i)
     {
         int a, b; cin >> a >> b;
-
         tree[a].push_back(b);
         tree[b].push_back(a);
     }
 
     dfs(1, 0);
 
-    cout << ans << "\n";
+    int diameter = 0;
+
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        diameter = max(diameter, best1[i] + best2[i]);
+    }
+
+    cout << diameter << "\n";
 }
 
 void fastIO()
@@ -61,7 +60,7 @@ void fastIO()
     cout.tie(NULL);
 }
 
-signed main()
+int main()
 {
     fastIO();
     solve();
