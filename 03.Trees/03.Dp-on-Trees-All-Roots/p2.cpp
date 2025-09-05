@@ -1,107 +1,129 @@
+//Straightforward implementation of the idea from the editorial
 #include <bits/stdc++.h>
+
 using namespace std;
 
 #define int long long
 
-const int MAXN = 2 * 1e5 + 10;
+const int MAXN = 1e5 + 10;
 
 int N, M;
 vector<vector<int>> tree(MAXN);
+int down[MAXN], up[MAXN];
+vector<int> pref[MAXN]; // pref[i][k] -> product of the first K children node I
+vector<int> suff[MAXN]; // suff[i][k] -> product of the last K children node I
 
-// dp[u]  = product over children v of (dp[v] + 1)  (subtree-only, rooted at 1)
-// up[u]  = parent/siblings contribution for u, seen from the parent side
-// ans[u] = final rerooted answer at u = (up[u] + 1) * product over children (dp[v] + 1)
-int dp[MAXN], upv[MAXN], ans[MAXN];   // FIX: added upv[]; ans[] will store final answers
+void dfs2(int node, int par)
+{
+    vector<int> children;
+    
+    for (const int& to : tree[node]) if (to != par) children.push_back(to);
 
-/*--------------------- dfs1: compute subtree dp ---------------------
-
-   FIX: The correct formula for this problem is:
-        dp[u] = Π (dp[v] + 1) over children v
-        (NOT 1 + Π dp[v], and no special "leaf = 2")
-
---------------------------------------------------------------------*/
-void dfs1(int u, int p) {
-    int prod = 1 % M;
-    for (int v : tree[u]) {
-        if (v == p) continue;
-        dfs1(v, u);
-        // multiply by (dp[v] + 1), modulo M
-        prod = (prod * ((dp[v] + 1) % M)) % M;  // FIX: dp[v] + 1 instead of dp[v]
+    for (int j = 0; j < children.size(); ++j)
+    {
+        int to = children[j];
+        
+        long long left  = (j ? pref[node][j-1] : 1);
+        long long right = (j+  1 < children.size() ? suff[node][j + 1] : 1);
+        
+        up[to] = ((up[node] * left % M) * right + 1) % M;   
+        
+        dfs2(to, node);
     }
-    dp[u] = prod;                               // FIX: leaf implicitly gets 1 (empty product)
+
 }
 
-/*--------------------- dfs2: reroot with prefix/suffix ---------------------
+void dfs1(int node, int par)
+{
+    bool isLeaf = true;
 
-   FIX: No modular division! We build prefix/suffix products of (dp[child]+1).
-        The contribution sent from u to a child v is:
-           up[v] = (up[u] + 1) * Π_{w != v} (dp[w] + 1)   (all modulo M)
-        Then the final answer at u is:
-           ans[u] = (up[u] + 1) * Π_{children w} (dp[w] + 1)
+    down[node] = 1;
 
---------------------------------------------------------------------------*/
-void dfs2(int u, int p) {
-    // Build a compact list of children (exclude parent)
-    vector<int> ch;
-    ch.reserve(tree[u].size());
-    for (int v : tree[u]) if (v != p) ch.push_back(v);
+    for(const int& to : tree[node])
+    {
+        if(to == par) continue;
+        
+        isLeaf = false;
 
-    // Prefix/suffix products of (dp[child] + 1)
-    int k = (int)ch.size();
-    vector<int> pref(k + 1, 1), suf(k + 1, 1);   // FIX: prefix/suffix instead of division
+        dfs1(to, node);
 
-    for (int i = 0; i < k; ++i) {
-        int v = ch[i];
-        pref[i + 1] = (pref[i] * ((dp[v] + 1) % M)) % M;
-    }
-    for (int i = k - 1; i >= 0; --i) {
-        int v = ch[i];
-        suf[i] = (suf[i + 1] * ((dp[v] + 1) % M)) % M;
+        down[node] *= down[to];
+        down[node] %= M;
     }
 
-    // Final answer for u: combine parent-side and all children
-    ans[u] = ( ((upv[u] + 1) % M) * (pref[k] % M) ) % M;  // FIX: (up[u]+1) * Π children (dp+1)
+    down[node]++;
+    down[node] %= M;
 
-    // Push contributions to children
-    for (int i = 0; i < k; ++i) {
-        int v = ch[i];
-        // Excluding v: pref[i] * suf[i+1]
-        int siblings = (pref[i] * suf[i + 1]) % M;
-        // up[v] = (up[u] + 1) * siblings
-        upv[v] = ( ((upv[u] + 1) % M) * siblings ) % M;   // FIX: compute child’s up without division
-        dfs2(v, u);
+    vector<int> children;
+
+    for(const int& to : tree[node])
+    {
+        if(to == par) continue;
+        children.push_back(to);
+    }
+
+    int m = children.size();
+
+    if(m == 0) return;
+
+    pref[node].assign(m, 1);
+    suff[node].assign(m, 1);
+
+    pref[node][0] = down[children[0]];
+    pref[node][0] %= M; 
+    for(int i = 1 ; i < m ; ++i)
+    {
+
+        pref[node][i] = pref[node][i - 1] * down[children[i]];
+        pref[node][i] %= M; 
+    }
+
+    suff[node][m - 1] = down[children[m - 1]];
+    suff[node][m - 1] %= M; 
+    for(int i = m - 2 ; i >= 0 ; --i)
+    {
+        suff[node][i] = suff[node][i + 1] * down[children[i]];
+        suff[node][i] %= M; 
     }
 }
 
-void solve() {
+void solve()
+{
     cin >> N >> M;
 
-    for (int i = 1; i <= N - 1; ++i) {
+    for(int i = 1 ; i <= N - 1 ; ++i)
+    {
         int a, b; cin >> a >> b;
         tree[a].push_back(b);
         tree[b].push_back(a);
     }
 
-    // Root the tree at 1
     dfs1(1, 0);
-
-    // Root has no parent-side contribution
-    upv[1] = 0;                // FIX: up[root] = 0
+    
+    up[1] = 1;
     dfs2(1, 0);
 
-    // For EDPC V, we print ans[u] as-is (no "-1" subtraction).
-    // FIX: Do NOT subtract 1; the connected set containing u is never empty.
-    for (int i = 1; i <= N; ++i) {
-        cout << ans[i] % M << (i == N ? '\n' : ' ');
+    for(int i = 1 ; i <= N ; ++i)
+    {
+        long long a = (down[i] - 1) % M;
+        
+        if (a < 0) a += M;
+        
+        cout << (a * (up[i] % M)) % M << ' ';
     }
+
+    cout << "\n";
 }
 
-void fastIO() {
+void fastIO()
+{
     ios_base::sync_with_stdio(false);
-    cin.tie(nullptr);
+    cin.tie(NULL);
+    cout.tie(NULL);
 }
 
-signed main() {
+signed main()
+{
     fastIO();
     solve();
 }
