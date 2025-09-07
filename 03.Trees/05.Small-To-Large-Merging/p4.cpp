@@ -9,34 +9,6 @@ int cnt = 0;
 
 set<int> friends[MAXN];
 
-int compute()
-{
-    int ret = 0;    
-
-    for(int x = 1 ; x <= n ; ++x)
-    {
-        int exchange = 0;
-
-        for(int y : friends[x])
-        {
-            for(int z : friends[y])
-            {
-                if(y != z)
-                {
-                    if(friends[z].find(y) != friends[z].end())
-                    {
-                        ++exchange;
-                    }
-                }
-            }
-        }
-
-        ret = max(ret, exchange);
-    }
-
-    return ret;
-}
-
 void solve()
 {
     cin >> n >> m;
@@ -47,7 +19,6 @@ void solve()
         
         friends[a].insert(b);
         
-        cout << cnt + compute() << "\n";
     }
 }
 
