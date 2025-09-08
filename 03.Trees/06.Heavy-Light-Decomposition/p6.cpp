@@ -2,12 +2,48 @@
 
 using namespace std;
 
+#define int long long
+
 const int MAXN = 1e5 + 10;
 
 int n, m;
-int val[MAXN];
 vector<vector<int>> tree(MAXN);
-set<int> st[MAXN];
+
+namespace Fenwick
+{
+    int bit[MAXN];
+
+    void set()
+    {
+        fill(bit, bit + MAXN, 0);
+    }
+
+    void update(int idx, int val)
+    {
+        for(; idx <= n ; idx += (idx & (-idx)))
+        {
+            bit[idx] += val;
+        }
+    }
+
+    void update(int l, int r, int val)
+    {
+        update(l, +val);
+        update(r + 1, -val);
+    }
+
+    int query(int idx)
+    {
+        int s = 0;
+
+        for(; idx >= 1 ; idx -= (idx & (-idx)))
+        {
+            s += bit[idx];
+        }
+
+        return s;
+    }
+};
 
 namespace HLD
 {
@@ -35,25 +71,25 @@ namespace HLD
         id[node] = counter++;
         top[node] = head;
 
-        int heavy_child = -1, heavy_child_siz = -1;
+        int h_ch = -1, h_ch_siz = -1;
 
         for(const int& child : tree[node])
         {
             if(child == par) continue;
 
-            if(siz[child] > heavy_child_siz)
+            if(siz[child] > h_ch_siz)
             {
-                heavy_child_siz = siz[child];
-                heavy_child = child;
+                h_ch_siz = siz[child];
+                h_ch = child;
             }
         }
 
-        if(heavy_child == -1) return;
-        decompose(heavy_child, node, head);
+        if(h_ch == -1) return;
+        decompose(h_ch, node, head);
 
         for(const int& child : tree[node])
         {
-            if(child == par || child == heavy_child) continue;
+            if(child == par || child == h_ch) continue;
             decompose(child, node, child);
         }
     }
@@ -61,56 +97,41 @@ namespace HLD
     void build()
     {
         dfs(1, 0, 0);
-
+        
         depth[0] = top[0] = 0;
 
         decompose(1, 0, 1);
 
-        for(int i = 1 ; i <= n ; ++i)
-        {
-            st[val[i]].insert(id[i]);
-        }
+        Fenwick::set();
     }
 
-    int get(int l, int r, int c)
+    void update(int a, int b)
     {
-        auto it = st[c].lower_bound(l);
-
-        return (it != st[c].end() && (*it) <= r ? 1 : 0);
-    }
-
-    int query(int a, int b, int c)
-    {
-        int res = 0;
-
         while(top[a] != top[b])
         {
             if(depth[top[a]] < depth[top[b]]) swap(a, b);
 
-            res |= get(id[top[a]], id[a], c);
+            Fenwick::update(id[top[a]], id[a], +1);
 
             a = parent[top[a]];
         }
 
         if(depth[a] > depth[b]) swap(a, b);
 
-        res |= get(id[a], id[b], c);
+        Fenwick::update(id[a] + 1, id[b], +1);
+    }
 
-        return res;
+    int query(int a, int b)
+    {
+        if(depth[a] < depth[b]) swap(a, b);
+
+        return Fenwick::query(id[a]);
     }
 };
 
 void solve()
 {
-    freopen("milkvisits.in", "r", stdin);
-    freopen("milkvisits.out", "w", stdout);
-
     cin >> n >> m;
-
-    for(int i = 1 ; i <= n ; ++i)
-    {
-        cin >> val[i];
-    }
 
     for(int i = 1 ; i <= n - 1 ; ++i)
     {
@@ -123,12 +144,20 @@ void solve()
 
     for(int i = 1 ; i <= m ; ++i)
     {
-        int a, b, c;
-        cin >> a >> b >> c;
-        cout << HLD::query(a, b, c);
-    }
+        char qType;
+        int x, y;
 
-    cout << "\n";
+        cin >> qType >> x >> y;
+
+        if(qType == 'P')
+        {
+            HLD::update(x, y);
+        }
+        else
+        {
+            cout << HLD::query(x, y) << "\n";
+        }
+    }
 }
 
 void fastIO()
@@ -138,10 +167,8 @@ void fastIO()
     cout.tie(NULL);
 }
 
-int main()
+signed main()
 {
     fastIO();
     solve();
-    
-    return 0;
 }
