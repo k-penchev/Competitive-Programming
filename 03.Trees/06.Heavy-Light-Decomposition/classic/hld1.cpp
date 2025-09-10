@@ -2,18 +2,19 @@
 
 using namespace std;
 
-const int MAXN = 2 * 1e5 + 10;
+const int MAXN = 1e5 + 10;
+const int NINF = -1e9;
 
-int n, q;
-int val[MAXN];
+int T, N;
+int a[MAXN], b[MAXN], w[MAXN];
 vector<vector<int>> tree(MAXN);
 
 namespace SegmentTree
-{
+{   
     int seg[4 * MAXN];
 
     void build(int idx, int low, int high, int v[])
-    {
+    {   
         if(low == high)
         {
             seg[idx] = v[low];
@@ -50,7 +51,7 @@ namespace SegmentTree
 
     int query(int idx, int low, int high, int queryL, int queryR)
     {
-        if(queryL > high || queryR < low) return INT_MIN;
+        if(queryL > high || queryR < low) return NINF;
         else if(queryL <= low && high <= queryR) return seg[idx];
 
         int mid = (low + high) / 2;
@@ -62,17 +63,22 @@ namespace SegmentTree
 
     void build(int v[])
     {
-        build(1, 1, n, v);
+        build(1, 1, N, v);
     }
 
     void update(int pos, int val)
     {
-        update(1, 1, n, pos, val);
+        update(1, 1, N, pos, val);
     }
 
     int query(int l, int r)
     {
-        return query(1, 1, n, l, r);
+        return query(1, 1, N, l, r);
+    }
+
+    void clear()
+    {
+        fill(seg, seg + 4 * MAXN, 0);
     }
 };
 
@@ -102,25 +108,25 @@ namespace HLD
         id[node] = counter++;
         top[node] = head;
 
-        int heavy_child = -1, heavy_child_sz = -1;
+        int h_ch = -1, h_ch_siz = -1;
 
         for(const int& child : tree[node])
         {
             if(child == par) continue;
 
-            if(siz[child] > heavy_child_sz)
+            if(siz[child] > h_ch_siz)
             {
-                heavy_child_sz = siz[child];
-                heavy_child = child;
+                h_ch_siz = siz[child];
+                h_ch = child;
             }
         }
 
-        if(heavy_child == -1) return;
-        decompose(heavy_child, node, head);
+        if(h_ch == -1) return;
+        decompose(h_ch, node, head);
 
         for(const int& child : tree[node])
         {
-            if(child == par || child == heavy_child) continue;
+            if(child == par || child == h_ch) continue;
             decompose(child, node, child);
         }
     }
@@ -128,80 +134,108 @@ namespace HLD
     void build()
     {
         dfs(1, 0, 0);
-
-        top[0] = 0;
-        depth[0] = -1;
-
         decompose(1, 0, 1);
 
-        for(int i = 1 ; i <= n ; ++i)
+        flat[id[1]] = NINF;
+
+        for(int i = 1 ; i <= N - 1 ; ++i)
         {
-            flat[id[i]] = val[i];
+            int edge = (depth[a[i]] > depth[b[i]] ? a[i] : b[i]);
+            flat[id[edge]] = w[i];
         }
 
         SegmentTree::build(flat);
     }
 
-    void update(int node, int val)
+    void update(int edge_id, int new_w)
     {
-        SegmentTree::update(id[node], val);
+        int f = a[edge_id], s = b[edge_id];
+        int node = (depth[f] > depth[s] ? f : s);
+
+        SegmentTree::update(id[node], new_w);
     }
 
     int query(int a, int b)
     {
-        int ret = INT_MIN;
+        int res = NINF;
 
         while(top[a] != top[b])
         {
             if(depth[top[a]] < depth[top[b]]) swap(a, b);
-            
-            ret = max(ret, SegmentTree::query(id[top[a]], id[a]));
+
+            res = max(res, SegmentTree::query(id[top[a]], id[a]));
 
             a = parent[top[a]];
         }
 
         if(depth[a] > depth[b]) swap(a, b);
 
-        ret = max(ret, SegmentTree::query(id[a], id[b]));
+        res = max(res, SegmentTree::query(id[a] + 1, id[b]));
 
-        return ret;
+        return res;
+    }
+
+    void clear()
+    {
+        fill(a + 1, a + N + 1, 0);
+        fill(b + 1, b + N + 1, 0);
+        fill(w + 1, w + N + 1, 0);
+
+        for(auto& t : tree) t.clear();
+
+        fill(depth + 1, depth + N + 1, 0);
+        fill(siz + 1, siz + N + 1, 0);
+        fill(parent + 1, parent + N + 1, 0);
+        fill(top + 1, top + N + 1, 0);
+        fill(id + 1, id + N + 1, 0);
+        fill(flat + 1, flat + N + 1, 0);
+        
+        counter = 1;
+        
+        SegmentTree::clear();
     }
 };
 
 void solve()
 {
-    cin >> n >> q;
+    cin >> T;
 
-    for(int i = 1 ; i <= n ; ++i)
+    for(int rep = 1 ; rep <= T ; ++rep)
     {
-        cin >> val[i];
-    }
+        cin >> N;
 
-    for(int i = 1 ; i <= n - 1 ; ++i)
-    {
-        int a, b; cin >> a >> b;
-        tree[a].push_back(b);
-        tree[b].push_back(a);
-    }
-
-    HLD::build();
-
-    for(int i = 1 ; i <= q ; ++i)
-    {
-        int qType, x, y;
-        cin >> qType >> x >> y;
-
-        if(qType == 1)
+        for(int i = 1 ; i <= N - 1; ++i)
         {
-            HLD::update(x, y);
-        }
-        else
-        {
-            cout << HLD::query(x, y) << " ";
-        }
-    }
+            cin >> a[i] >> b[i] >> w[i];
 
-    cout << "\n";
+            tree[a[i]].push_back(b[i]);
+            tree[b[i]].push_back(a[i]);
+        }
+
+        HLD::build();
+
+        string qType;
+        int x, y;
+
+        while(true)
+        {
+            cin >> qType;
+
+            if(qType == "CHANGE")
+            {
+                cin >> x >> y;  
+                HLD::update(x, y);
+            }
+            else if(qType == "QUERY")
+            {
+                cin >> x >> y;
+                cout << HLD::query(x, y) << "\n";
+            }
+            else break;
+        }
+
+        HLD::clear();
+    }
 }
 
 void fastIO()
@@ -211,7 +245,7 @@ void fastIO()
     cout.tie(NULL);
 }
 
-signed main()
+int main()
 {
     fastIO();
     solve();
