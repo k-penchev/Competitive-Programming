@@ -2,61 +2,78 @@
 
 using namespace std;
 
-const int MAXN = 2 * 1e5 + 10;
+const int MAXN = 1e5 + 10;
 
 int n;
-vector<vector<int>> tree(MAXN);
+vector<int> tree[MAXN];
 
 namespace CD
 {
     int siz[MAXN];
     bool is_removed[MAXN];
+    vector<int> c[MAXN];
 
-    void find_subtree_siz(int node, int par)
+    void find_subtree_size(int node, int par)
     {
         siz[node] = 1;
-        
+
         for(const int& child : tree[node])
         {
             if(child == par || is_removed[child]) continue;
 
-            find_subtree_siz(child, node);
+            find_subtree_size(child, node);
+
             siz[node] += siz[child];
         }
     }
 
-    int find_centroid(int node, int par, int sz)
+    int find_centroid(int node, int par, int root_sz)
     {
         for(const int& child : tree[node])
         {
             if(child == par || is_removed[child]) continue;
 
-            if(siz[child] * 2 > sz) return find_centroid(child, node, sz);
+            if(siz[child] * 2 > root_sz) return find_centroid(child, node, root_sz);
         }
 
         return node;
     }
 
-    void build(int node = 1)
+    int decompose(int node)
     {
-        //cout << "Building for " << node << "\n";
-        fill(siz, siz + MAXN, 0);
-
-        find_subtree_siz(node, 0);
-        //cout << "Siz =" << siz[node] << "\n";
+        find_subtree_size(node, 0);
         int centroid = find_centroid(node, 0, siz[node]);
-        //cout << "Centroid =" << centroid << "\n";
-        //do something
 
         is_removed[centroid] = true;
 
-        for(const int& child : tree[node])
+        for(const int& child : tree[centroid])
         {
             if(is_removed[child]) continue;
-            build(child);
+            c[centroid].push_back(decompose(child));
         }
+
+        return centroid;
     }
-};
+
+    void dfs(int centroid, int par)
+    {
+        cout << "Entering " << centroid << "\n";
+
+        for(const int& child : c[centroid])
+        {
+            if(child == par) continue;
+            dfs(child, centroid);
+        }
+
+        cout << "Exiting " << centroid << "\n";
+    }
+
+    void build()
+    {
+        int root = decompose(1);
+        dfs(root, 0);
+    }
+}
 
 void solve()
 {
@@ -64,9 +81,7 @@ void solve()
 
     for(int i = 1 ; i <= n - 1 ; ++i)
     {
-        int a, b;
-        cin >> a >> b;
-
+        int a, b; cin >> a >> b;
         tree[a].push_back(b);
         tree[b].push_back(a);
     }
@@ -85,6 +100,4 @@ int main()
 {
     fastIO();
     solve();
-    
-    return 0;
 }
