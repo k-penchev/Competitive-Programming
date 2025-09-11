@@ -7,7 +7,7 @@ const int MAXN = 1e5 + 10;
 int n;
 vector<int> tree[MAXN];
 
-namespace CD
+namespace Centroid
 {
     int siz[MAXN];
     bool is_removed[MAXN];
@@ -57,15 +57,11 @@ namespace CD
 
     void dfs(int centroid, int par)
     {
-        cout << "Entering " << centroid << "\n";
-
         for(const int& child : c[centroid])
         {
             if(child == par) continue;
             dfs(child, centroid);
         }
-
-        cout << "Exiting " << centroid << "\n";
     }
 
     void build()
@@ -86,7 +82,7 @@ void solve()
         tree[b].push_back(a);
     }
 
-    CD::build();
+    Centroid::build();
 }
 
 void fastIO()
