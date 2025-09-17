@@ -46,6 +46,8 @@ namespace Centroid
 
         is_removed[centroid] = true;
 
+        //do something
+
         for(const int& child : tree[centroid])
         {
             if(is_removed[child]) continue;
