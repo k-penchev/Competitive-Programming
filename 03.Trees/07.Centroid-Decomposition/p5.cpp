@@ -7,14 +7,12 @@ const int MAXN = 1e5 + 10;
 
 int n;
 std::vector<std::pair<int, int>> tree[MAXN];
-long long globalAnswer = 0;
 
 namespace Centroid
 {
     int sz[MAXN];
     bool vis[MAXN];
-    std::unordered_map<int, int> current;
-    std::unordered_map<int, int> merged;
+    std::unordered_map<int, int> map1, map2, map3; //many times, one time, current
 
     void findSize(int node, int par)
     {
@@ -22,61 +20,67 @@ namespace Centroid
 
         for (const auto& [child, w] : tree[node])
         {
-            if (child == par || vis[child]) continue;
+            if(child == par || vis[child]) continue;
 
             findSize(child, node);
             sz[node] += sz[child];
-        }
+        } 
     }
 
-    int getCentroid(int node, int par, int globalSize)
+    int findCentroid(int node, int par, int globalSize)
     {
         for (const auto& [child, w] : tree[node])
         {
-            if (child == par || vis[child] || 2 * sz[child] <= globalSize) continue;
-            return getCentroid(child, node, globalSize);
+            if(child == par || vis[child]) continue;
+
+            if(sz[child] * 2 > globalSize) return findCentroid(child, node, globalSize);
         }
 
         return node;
     }
 
-    void computeDfs(int node, int par, int currLength)
+    void dfs(int node, int par, int currDist)
     {
-        current[currLength]++;
+        //map3[currDist] += 1;
+
+        if(map1.count(-currDist)) //typeA
+        {
+            
+        }
+        else if(map2.count(currDist)) //typeB
+        {
+
+        }
+        else
+        {
+
+        }
 
         for (const auto& [child, w] : tree[node])
         {
-            if (child == par || vis[child]) continue;
-            computeDfs(child, node, currLength + w);
+            if(child == par || vis[child]) continue;
+            dfs(child, node, currDist + w);
         }
     }
 
     void decompose(int node)
     {
         findSize(node, 0);
-        int cntr = getCentroid(node, 0, sz[node]);
+        int cntr = findCentroid(node, 0, sz[node]);
 
-        vis[cntr] = true;
+        vis[cntr] = 1;
 
         for (const auto& [child, w] : tree[cntr])
         {
-            if (vis[child]) continue;
+            if(vis[child]) continue;
 
-            current.clear();
-            computeDfs(child, cntr, w);
-
-            for(auto& [dist, cnt] : current)
-            {
-                globalAnswer += cnt * merged[-dist];
-                merged[dist] += cnt;
-            }
+            dfs(child, cntr, w);
+            dfs(child, cntr, w);
         }
 
-        merged.clear();
-
         for (const auto& [child, w] : tree[cntr])
         {
-            if (vis[child]) continue;
+            if(vis[child]) continue;
             decompose(child);
         }
     }
@@ -89,9 +93,6 @@ namespace Centroid
 
 void solve()
 {
-    //std::freopen("yinyang.in", "r", stdin);
-    //std::freopen("yinyang.out", "w", stdout);
-
     std::cin >> n;
 
     for (int i = 1 ; i <= n - 1 ; ++i)
@@ -100,13 +101,9 @@ void solve()
         std::cin >> a >> b >> w;
 
         if (w == 0) w = -1;
-
         tree[a].push_back({b, w});
         tree[b].push_back({a, w});
     }
-
-    Centroid::build();
-    std::cout << globalAnswer << "\n";
 }
 
 void fastIO()
