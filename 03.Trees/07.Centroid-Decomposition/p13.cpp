@@ -74,10 +74,11 @@ namespace Centroid
 {
     int sz[MAXN];
     bool vis[MAXN];
+    int topLevel[MAXN];
     int centroidPar[MAXN][MAXLOG];
     int centroidDist[MAXN][MAXLOG];
-    std::vector<int> centroidRadius[MAXN];  // the centroid values itself
-    std::vector<int> childRadius[MAXN];     // the values for the parentCentroid 
+    std::vector<int> centroidRadius[MAXN];  // centroidRaius[i] -> the values for centroid i
+    std::vector<int> childRadius[MAXN];     // childRadius[i]   -> the values, which come from centroid i and contribute to i's parent
 
     void findSize(int node, int par)
     {
@@ -108,6 +109,7 @@ namespace Centroid
     {
         centroidPar[node][globalLevel] = globalCentroid;
         centroidDist[node][globalLevel] = currDist;
+        if (globalLevel > topLevel[node]) topLevel[node] = globalLevel;
 
         for (const int& child : tree[node])
         {
@@ -136,6 +138,7 @@ namespace Centroid
 
     void build()
     {
+        for(int i = 1 ; i <= n ; ++i) topLevel[i] = -1;
         decompose(1, 0);
     }
 
@@ -163,52 +166,68 @@ namespace Centroid
     void update(int node, int R)
     {
         if (R < 0) return;
-        
-        int prev = -1;
-        
-        for (int lvl = 0; lvl < MAXLOG; ++lvl)
-        {            
-            int cntr = centroidPar[node][lvl];
-            
-            if (cntr == 0) break;                                     
-            
-            int d = centroidDist[node][lvl];
-            int raw = R - d;
-            
-            if (raw < 0) continue;
 
-            int idxC = std::min(raw, (int)centroidRadius[cntr].size() - 1);
-            centroidRadius[cntr][idxC] += 1;
+        int prev = -1;
+
+        for (int i = topLevel[node] ; i >= 0 ; --i)
+        {
+            int cntr = centroidPar[node][i];
+
+            if (cntr == 0) continue;
+
+            int dist = centroidDist[node][i];
+            int rem = R - dist;
+
+            if (rem < 0)
+            {
+                prev = cntr;
+                continue;
+            }
+
+            int max1 = (int)centroidRadius[cntr].size() - 1;
+            int idx1 = rem > max1 ? max1 : rem;
+            centroidRadius[cntr][idx1] += 1;
 
             if (prev != -1)
             {
-                int idxP = std::min(raw, (int)childRadius[prev].size() - 1);
-                childRadius[prev][idxP] += 1;
+                int max2 = (int)childRadius[prev].size() - 1;
+                int idx2 = rem > max2 ? max2 : rem;
+                childRadius[prev][idx2] += 1;
             }
-            prev = cntr;
 
+            prev = cntr;
         }
     }
 
-
     int query(int node)
     {
-        int s = 0, prev = -1;
-        
-        for (int lvl = 0; lvl < MAXLOG; ++lvl)
+        int s = 0;
+        int prev = -1;
+
+        for (int i = topLevel[node] ; i >= 0 ; --i)
         {
-            int cntr = centroidPar[node][lvl];
-            
-            if (cntr == 0) break;
-            
-            int d = centroidDist[node][lvl];
-            
-            if (d < (int)centroidRadius[cntr].size()) s += centroidRadius[cntr][d];
-            if (prev != -1 && d < (int)childRadius[prev].size()) s -= childRadius[prev][d];
-            
+            int cntr = centroidPar[node][i];
+
+            if (cntr == 0) continue;
+
+            int dist = centroidDist[node][i];
+            int max1 = (int)centroidRadius[cntr].size() - 1;
+
+            if (dist <= max1)
+            {
+                s += centroidRadius[cntr][dist];
+            }
+
+            if (prev != -1)
+            {
+                int max2 = (int)childRadius[prev].size() - 1;
+                int d2 = dist > max2 ? max2 : dist;
+                s -= childRadius[prev][d2];
+            }
+
             prev = cntr;
         }
-        
+
         return s;
     }
 
