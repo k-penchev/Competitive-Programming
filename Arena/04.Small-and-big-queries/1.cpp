@@ -6,18 +6,30 @@ const int MAXN = 2 * 1e5 + 10;
 const int SQRT = 450;
 
 int n, m, q;
-std::vector<int> g[MAXN];
-bool type[MAXN];
-int number[MAXN];
+std::vector<int> g[MAXN], big_g[MAXN];
+
+struct Tag
+{
+    int v;
+    int time;
+};
+
+Tag number[MAXN], lazy[MAXN];
+
+void find_number(int node)
+{
+    for(int i : big_g[node])
+    {
+        if(number[node].time < lazy[i].time)
+        {
+            number[node] = lazy[i];
+        }
+    }
+}
 
 void solve()
 {
     std::cin >> n >> m >> q;
-
-    for(int i = 1 ; i <= n ; ++i)
-    {
-        number[i] = i;
-    }
 
     for(int i = 1 ; i <= m ; ++i)
     {
@@ -25,25 +37,48 @@ void solve()
         std::cin >> a >> b;
         g[a].push_back(b);
         g[b].push_back(a);
+    }
 
-        if(g[a].size() >= SQRT) type[a] = 1;
-        if(g[b].size() >= SQRT) type[b] = 1;
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        number[i] = {i, 0};
+    }
+
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        for(int j : g[i])
+        {
+            if(g[j].size() >= SQRT)
+            {
+                big_g[i].push_back(j);
+            }
+        }
     }
 
     for(int i = 1 ; i <= q ; ++i)
     {
-        int x; 
+        int x;
         std::cin >> x;
 
-        for(int j = 0 ; j < g[x].size() ; ++j)
+        find_number(x);
+
+        if(g[x].size() >= SQRT)
         {
-            number[g[x][j]] = number[x];
+            lazy[x] = {number[x].v, i};
+        }
+        else
+        {
+            for(int j : g[x])
+            {
+                number[j] = {number[x].v, i};
+            }
         }
     }
 
     for(int i = 1 ; i <= n ; ++i)
     {
-        std::cout << number[i] << " ";
+        find_number(i);
+        std::cout << number[i].v << " ";
     }
 
     std::cout << "\n";

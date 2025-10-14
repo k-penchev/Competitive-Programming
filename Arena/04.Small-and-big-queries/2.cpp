@@ -2,13 +2,14 @@
 #include <algorithm>
 #include <vector>
 
+
 const int MAXN = 1e5 + 10;
-const int MAXK = 1e6 + 10;
+const int MAXK =  (1 << 20) + 5;;
 const int SQRT = 320;
 
 int n, m, k;
-int a[MAXN], pref[MAXN], ans[MAXN];
-int cnt[MAXK], total = 0;
+long long a[MAXN], pref[MAXN], ans[MAXN];
+long long cnt[MAXK], total = 0;
 
 struct Query
 {
@@ -50,7 +51,7 @@ void solve()
     {
         int l, r;
         std::cin >> l >> r;
-        query.push_back({i, l, r});
+        query.push_back({i, l - 1, r});
     }
 
     std::sort(query.begin(), query.end(), [&](const Query& a, const Query& b)
@@ -98,10 +99,8 @@ void solve()
 
     for(int i = 1 ; i <= m ; ++i)
     {
-        std::cout << ans[i] << " ";
+        std::cout << ans[i] << "\n";
     }
-
-    std::cout << "\n";
 }
 
 void fastIO()
