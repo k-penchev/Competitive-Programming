@@ -157,7 +157,7 @@ void solve()
             return q1.r < q2.r;
         }
 
-        return ( (q1.l / SQRT) < (q2.l / SQRT) );
+        return ((q1.l / SQRT) < (q2.l / SQRT));
     });
 
 
