@@ -1,70 +1,122 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <cmath> 
 
-const int MAXN = 1e6 + 10;
+const int MAXN = 2e5 + 10;
+const int BUCKET = 460;
 
 int n, q;
-int a[MAXN];
+int a[MAXN], cnt[MAXN];
 bool included[MAXN];
+
+bool isBig[MAXN];
+std::vector<int> bigColor;
+int ans[BUCKET][MAXN]; 
 
 int query(int x, int y)
 {
-    int swaps = 1e9, curr_swaps = 0;
+    int swaps = 0;
     std::fill(included + 1, included + n + 1, 0);
 
+    int cnt1 = 0, cnt2 = 0;
     for(int i = 1 ; i <= n ; ++i)
     {
         if(a[i] == x || a[i] == y)
         {
             included[i] = 1;
+            cnt1 += 1;
         }
     }
 
+    int pivot = (cnt1 / 2 + cnt1 % 2), pivot_idx = 0;
     for(int i = 1 ; i <= n ; ++i)
     {
         if(included[i])
         {
-            int l = 0, r = 0, curr_swaps = 0;
-            for(int j = i - 1 ; j >= 1 ; --j)
-            {
-                if(included[j])
-                {
-                    curr_swaps += (i - j - 1) - l;
-                    l += 1;
-                }
-            }
+            cnt2 += 1;
+        }
+        
+        if(cnt2 == pivot)
+        {
+            pivot_idx = i;
+            break;
+        }
+    }
 
-            for(int j = i + 1 ; j <= n ; ++j)
-            {
-                if(included[j])
-                {
-                    curr_swaps += (j - i - 1) - r;
-                    r += 1;
-                }
-            }
+    
+    int l = 0, r = 0;
+    for(int j = pivot_idx - 1 ; j >= 1 ; --j)
+    {
+        if(included[j])
+        {
+            swaps += (pivot_idx - j - 1) - l;
+            l += 1;
+        }
+    }
 
-            swaps = std::min(swaps, curr_swaps);
+    for(int j = pivot_idx + 1 ; j <= n ; ++j)
+    {
+        if(included[j])
+        {
+            swaps += (j - pivot_idx - 1) - r;
+            r += 1;
         }
     }
 
     return swaps;
 }
 
+void queryBig(int x, int y)
+{
+    ans[x][y] = query(x, y);
+}
+
 void solve()
 {
     std::cin >> n >> q;
+    int BUCKET_SIZE = static_cast<int>(std::sqrt(n));
 
     for(int i = 1 ; i <= n ; ++i)  
     {
         std::cin >> a[i];
+        cnt[a[i]] += 1;
     }
     
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        if(cnt[i] >= BUCKET_SIZE)
+        {
+            isBig[i] = 1;
+            bigColor.push_back(i);
+        }
+    }
+
+    for(int i = 0 ; i < bigColor.size() ; ++i)
+    {
+        for(int j = 1 ; j <= n ; ++j)
+        {
+            queryBig(bigColor[i], j);
+        }
+    }
+
     for(int i = 1 ; i <= q ; ++i)
     {
         int x, y;
         std::cin >> x >> y;
-        std::cout << query(x, y) << "\n";
+
+        if(isBig[x])
+        {
+            std::cout << ans[x][y] << "\n";
+        }
+        else if(isBig[y])
+        {
+            std::cout << ans[y][x] << "\n";
+        }
+        else
+        {
+            std::cout << query(x, y) << "\n";
+        }
     }
 }
 
