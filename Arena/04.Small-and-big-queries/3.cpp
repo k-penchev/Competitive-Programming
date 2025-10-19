@@ -45,19 +45,22 @@ void solve()
 
     std::sort(a + 1, a + n + 1);
 
-    for(int i = 1 ; i <= n ; ++i)
+    ans[1] = n;
+    for(int k = 2 ; k <= n ; ++k) //t
     {
-        int l_ptr = 0, r_ptr = n / i + 1;
-
-        while(l_ptr + 1 < r_ptr)
+        int T = ans[k - 1];
+        while(true)
         {
-            int m = (l_ptr + r_ptr) / 2;
+            int answer = calc(T);
 
-            if(calc(m) >= i) l_ptr = m;
-            else r_ptr = m;
+            if(answer == k)
+            {
+                ans[k] = answer;
+                break;
+            }
+
+            T -= 1;
         }
-
-        ans[i] = l_ptr;
     }
 
     for(int i = l ; i <= r ; ++i)
