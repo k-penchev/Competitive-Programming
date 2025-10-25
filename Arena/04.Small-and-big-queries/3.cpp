@@ -7,6 +7,7 @@ const int MAXN = 1e5 + 10;
 int n, c, l, r;
 int a[MAXN], b[MAXN];
 int ans[MAXN];
+bool done[MAXN];
 
 int calc(int t)
 {
@@ -45,27 +46,24 @@ void solve()
 
     std::sort(a + 1, a + n + 1);
 
-    ans[1] = n;
-    for(int k = 2 ; k <= n ; ++k) //t
+    int curr = n;
+    for(int t = 1 ; t <= n ; ++t)
     {
-        int T = ans[k - 1];
-        while(true)
+        int k0 = calc(t);
+
+        for(int k = curr ; k > k0 ; --k)
         {
-            int answer = calc(T);
-
-            if(answer == k)
-            {
-                ans[k] = answer;
-                break;
-            }
-
-            T -= 1;
+            ans[k] = t - 1;
         }
+
+        curr = k0;
     }
 
-    for(int i = l ; i <= r ; ++i)
+    ans[1] = n;
+
+    for(int k = l ; k <= r ; ++k)
     {
-        std::cout << ans[i] << " ";
+        std::cout << ans[k] << " ";
     }
 
     std::cout << "\n";
