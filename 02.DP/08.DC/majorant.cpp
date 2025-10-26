@@ -4,17 +4,20 @@
 #include <unordered_map>
 #include <set>
 
-const int MAXN = 2e5 + 10;
+#define int long long
+
+const int MAXN = 65000 + 10;
 const int MOD1 = 100000000;
 const int MOD2 = 998244353;
 
 int n, m;
 int a[MAXN], toCompress[MAXN];
-std::unordered_map<int, int> compressed;
-int globalNum = 0;
-int lastOutput = 0;
+std::unordered_map<int, int> compressed, rev;
+int globalNum = 1;
+int lastOutput = 0, ans = 0;
 
-int cnt[MAXN];
+std::set<int> major;
+int cnt[5 * MAXN], suffix[2 * MAXN + 10];
 
 void clear(int l, int r)
 {
@@ -28,15 +31,20 @@ void divide(int l, int r)
 {
     if(l > r) return;
 
+    std::cout << "\n";
+
+    std::cout << l << " " << r << "\n";
+
     if(l == r)
     {
-        lastOutput = (lastOutput + compressed[a[l]]) % MOD2;
+        ans = (ans + a[l]) % MOD2;
+        return;
     }
 
     int m = (l + r) / 2;
     divide(l, m); divide(m + 1, r);
 
-    std::set<int> major;
+    major.clear();
 
     clear(l, m);
     for(int i = m ; i >= l ; --i)
@@ -62,12 +70,46 @@ void divide(int l, int r)
 
     for(auto it = major.begin() ; it != major.end(); ++it)
     {
-        for(int i = m ; i >= l ; --i)
+        int currentMajor = *it;
+
+        for(int i = n - (r - l + 1) ; i <= n + (r - l + 1) + 1 ; ++i)
         {
-            if(compressed[a[i]] == *it)
+            suffix[i] = 0;
+        }
+
+        int count = 0;
+        for(int i = m ; i >= l ; ++i)
+        {
+            if(compressed[a[i]] == currentMajor)
             {
-                
+                count += 1;
             }
+            else
+            {
+                count -= 1;
+            }
+
+            suffix[count + n] += 1;
+        }
+
+        for(int i = n + (r - l + 1) ; i >= n - (r - l + 1) ; --i)
+        {
+            suffix[i] += suffix[i + 1];
+        }
+
+        count = 0;
+        for(int i = m + 1 ; i <= r ; ++i)
+        {
+            if(compressed[a[i]] == currentMajor)
+            {
+                count += 1;
+            }
+            else
+            {
+                count -= 1;
+            }
+
+            ans = (ans + rev[currentMajor] * suffix[-count + n + 1]) % MOD2;
         }
     }
 }
@@ -87,6 +129,7 @@ void solve()
     for(int i = 1 ; i <= n ; ++i)
     {
         compressed[toCompress[i]] = globalNum;
+        rev[globalNum] = toCompress[i];
 
         if(i + 1 <= n && toCompress[i] != toCompress[i + 1])
         {
@@ -98,32 +141,35 @@ void solve()
 
     for(int i = 1 ; i <= m ; ++i)
     {
-        int l, r, t;
-        std::cin >> l >> r >> t;
+        int ql, qr, qt;
+        std::cin >> ql >> qr >> qt;
 
         int type, p, q;
        
-        type = ((t + lastOutput) % 2) + 1;
+        type = ((qt + lastOutput) % 2) + 1;
         if(type == 1)
         {
-            p = ((l + lastOutput) % n) + 1;
-            q = ((r + lastOutput) % MOD1) + 1;
+            p = ((ql + lastOutput) % n) + 1;
+            q = ((qr + lastOutput) % MOD1) + 1;
 
             a[p] = q;
 
-            if(!compressed[q])
+            if(compressed[q] == 0)
             {
                 compressed[q] = ++globalNum;
+                rev[globalNum] = q;          
             }
         }
         else
         {
-            p = ((l + lastOutput) % MOD1) + 1;
-            q = ((r + lastOutput) % n) + 1;
+            p = ((ql + lastOutput) % n) + 1;
+            q = ((qr + lastOutput) % n) + 1;
 
-            lastOutput = 0;
             divide(p, q);
-            std::cout << lastOutput << "\n";
+            std::cout << ans << "\n";
+
+            lastOutput = ans;
+            ans = 0;
         }   
     }
 }
@@ -135,7 +181,7 @@ void fastIO()
     std::cout.tie(NULL);
 }
 
-int main()
+signed main()
 {
     fastIO();
     solve();
