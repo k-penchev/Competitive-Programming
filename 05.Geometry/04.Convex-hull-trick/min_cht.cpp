@@ -44,10 +44,13 @@ struct CHT_MIN
     {
         x.from = -MAX_X;
 
-        while()
+        while(hull.size() && hull.back().at(hull.back().from) > x.at(hull.back().from))
         {
-            
+            hull.pop_back();
         }
+
+        if(hull.empty()) hull.push_back(x);
+        else if(x.at(MAX_X) < hull.back().at(MAX_X)) hull.push_back({x.a, x.b, intersect(hull.back(), x)});
     }
 
     long double query(long double x)
