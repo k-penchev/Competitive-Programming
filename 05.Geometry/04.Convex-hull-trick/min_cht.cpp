@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <cassert>
 
 const int MAXN = 1e5 + 10;
 const int MAX_X = 1e6 + 10;
@@ -55,7 +56,20 @@ struct CHT_MIN
 
     long double query(long double x)
     {
+        int l = 0, r = hull.size();
+        
+        while(l + 1 < r)
+        {
+            int m = (l + r) / 2;
 
+            if(hull[m].from <= x) l = m;
+            else r = m;
+        }
+
+        assert(l < hull.size());
+        long double ans = hull[l].at(x);
+
+        return ans;
     }
 };
 

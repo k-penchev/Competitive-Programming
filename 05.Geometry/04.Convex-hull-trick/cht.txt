@@ -1,0 +1,15 @@
+L --> R
+
+| Target               | Sort slopes m                | Who owns far left (x→−∞)?     | Pop rule while adding new line L                     | Keep-or-skip test for L                                                  | Set L.from to…         | Equal slopes       |
+| -------------------- | ---------------------------- | ----------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------- | ------------------ |
+| **MIN (lower hull)** | **descending** (big → small) | line with **largest** m       | pop last if **last.at(last.from) > L.at(last.from)** | keep only if **L.at(+∞) < last.at(+∞)** (i.e., L will beat to the right) | **intersect(last, L)** | keep **smaller b** |
+| **MAX (upper hull)** | **ascending** (small → big)  | line with **most negative** m | pop last if **last.at(last.from) < L.at(last.from)** | keep only if **L.at(+∞) > last.at(+∞)**                                  | **intersect(last, L)** | keep **larger b**  |
+
+
+R --> L
+
+| Target               | Sort slopes m                | Who owns far right (x→+∞)? | Pop rule                                             | Keep-or-skip test                       | Set L.from to…         | Equal slopes       |
+| -------------------- | ---------------------------- | -------------------------- | ---------------------------------------------------- | --------------------------------------- | ---------------------- | ------------------ |
+| **MIN (lower hull)** | **ascending** (small → big)  | line with **smallest** m   | pop last if **last.at(last.from) > L.at(last.from)** | keep only if **L.at(−∞) < last.at(−∞)** | **intersect(last, L)** | keep **smaller b** |
+| **MAX (upper hull)** | **descending** (big → small) | line with **largest** m    | pop last if **last.at(last.from) < L.at(last.from)** | keep only if **L.at(−∞) > last.at(−∞)** | **intersect(last, L)** | keep **larger b**  |
+
