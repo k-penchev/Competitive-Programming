@@ -47,25 +47,7 @@ struct Fenwick
         return queryPoint(n) - queryPoint(idx);
     }
 
-    int findKth(int target) // fast lower bound on fenwick tree
-    {
-        int sum = 0;
-        int pos = 0;
-
-        for(int i = LOG - 1 ; i >= 0 ; --i)
-        {
-            int nxt_pos = pos + (1 << i);
-
-            if(nxt_pos <= n && sum + bit[nxt_pos] < target)
-            {
-                sum += bit[nxt_pos];
-                pos = nxt_pos;
-            }
-        }
-
-        return pos + 1;
-    }
-
+    //findKth can be used here, too
 };
 
 Fenwick tree;
