@@ -13,3 +13,7 @@ R --> L
 | **MIN (lower hull)** | **ascending** (small → big)  | line with **smallest** m   | pop last if **last.at(last.from) > L.at(last.from)** | keep only if **L.at(−∞) < last.at(−∞)** | **intersect(last, L)** | keep **smaller b** |
 | **MAX (upper hull)** | **descending** (big → small) | line with **largest** m    | pop last if **last.at(last.from) < L.at(last.from)** | keep only if **L.at(−∞) > last.at(−∞)** | **intersect(last, L)** | keep **larger b**  |
 
+
+Important things:
+1)Another difference between L --> R and R --> is the binary search condition.
+2)If we know the queries in advance we can use a "ptr" to track them and do not need binary search. 

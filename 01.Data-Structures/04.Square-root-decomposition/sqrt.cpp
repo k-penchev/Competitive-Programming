@@ -45,7 +45,6 @@ struct Bucket {
 long long global_prefix[BUCKET_COUNT + 5];
 Bucket bucket[BUCKET_COUNT + 5];
 
-
 void solve()
 {
     cin >> n >> q;
