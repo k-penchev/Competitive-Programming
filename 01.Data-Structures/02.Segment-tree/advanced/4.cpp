@@ -1,11 +1,10 @@
-//general segment tree
-//range query (sum)
-//point update
+//Searching for the first element greater than a given amount
 #include <iostream>
 #include <algorithm>
 #include <vector>
 
 const int MAXN = 1e5 + 10;
+const int INF = 1e9;
 
 int n;
 int a[MAXN];
@@ -14,16 +13,16 @@ struct SegmentTree
 {
     struct Node
     {
-        int val;
+        int max;
 
         Node()
         {
-            val = 0;
+            max = -INF;
         }
 
         Node(int x)
         {
-            val = x;
+            max = x;
         }
     };
 
@@ -31,7 +30,7 @@ struct SegmentTree
 
     Node combine(const Node& x, const Node& y)
     {
-        return Node(x.val + y.val);
+        return Node(std::max(x.max, y.max));
     }
 
     void build(int idx, int low, int high, int * arr)
@@ -39,7 +38,7 @@ struct SegmentTree
         if(low == high)
         {
             tree[idx] = Node(arr[low]);
-            return; 
+            return;
         }
 
         int mid = (low + high) / 2;
@@ -50,12 +49,11 @@ struct SegmentTree
         tree[idx] = combine(tree[2 * idx], tree[2 * idx + 1]);
     }
 
-    void update(int idx, int low, int high, int pos, int newVal)
+    void update(int idx, int low, int high, int pos, int val)
     {
         if(low == high)
         {
-            tree[idx].val += newVal; //add 
-            //tree[idx] = Node(newVal); //replace
+            tree[idx] = Node(val);
             return;
         }
 
@@ -63,31 +61,38 @@ struct SegmentTree
 
         if(pos <= mid)
         {
-            update(2 * idx, low, mid, pos, newVal);
+            update(2 * idx, low, mid, pos, val);
         }
         else
         {
-            update(2 * idx + 1, mid + 1, high, pos, newVal);
+            update(2 * idx + 1, mid + 1, high, pos, val);
         }
 
         tree[idx] = combine(tree[2 * idx], tree[2 * idx + 1]);
     }
 
-    Node query(int idx, int low, int high, int queryL, int queryR)
+    int query(int idx, int low, int high, int x)
     {
-        if(queryL > high || queryR < low)
+        if(x >= tree[idx].max)
         {
-            return Node(0);
+            return -1;
         }
-        else if(queryL <= low && high <= queryR)
+
+        if(low == high)
         {
-            return tree[idx];
+            return low;
         }
 
         int mid = (low + high) / 2;
 
-        return combine(query(2 * idx, low, mid, queryL, queryR),
-                query(2 * idx + 1, mid + 1, high, queryL, queryR));
+        if(tree[2 * idx].max > x)
+        {
+            return query(2 * idx, low, mid, x);
+        }
+        else
+        {
+            return query(2 * idx + 1, mid + 1, high, x);
+        }
     }
 
     void build(int * arr)
@@ -100,9 +105,9 @@ struct SegmentTree
         update(1, 1, n, pos, val);
     }
 
-    int query(int l, int r)
+    int query(int x)
     {
-        return query(1, 1, n, l, r).val;
+        return query(1, 1, n, x);
     }
 };
 
@@ -116,12 +121,10 @@ void solve()
     {
         std::cin >> a[i];
     }
-
+    
     tree.build(a);
 
-    std::cout << tree.query(1, 4) << "\n";
-    tree.update(2, -2);
-    std::cout << tree.query(1, 4) << "\n";
+    std::cout << tree.query(4) << " " << tree.query(5) << " " << tree.query(12) << "\n";
 }
 
 void fastIO()
