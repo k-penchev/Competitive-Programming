@@ -1,4 +1,5 @@
-//the values in the bit can be various
+//fenwick tree for sum (with values being only 0s and 1s)
+//this is known as "compressed fenwick tree"
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -17,7 +18,7 @@ struct Fenwick
         std::fill(bit + 1, bit + n + 1, 0);
     }
 
-    void updatePoint(int idx, int val)
+    void update(int idx, int val)
     {
         for(; idx <= n ; idx += (idx & (-idx)))
         {
@@ -37,30 +38,17 @@ struct Fenwick
         return s;
     }
 
-    int queryRange(int l, int r)
+    int querySmallerThan(int idx)
     {
-        return queryPoint(r) - queryPoint(l - 1);
+        return queryPoint(idx - 1);
     }
 
-
-    int findKth(int target) // fast lower bound on fenwick tree
+    int queryBiggerThan(int idx)
     {
-        int sum = 0;
-        int pos = 0;
-
-        for(int i = LOG - 1 ; i >= 0 ; --i)
-        {
-            int nxt_pos = pos + (1 << i);
-
-            if(nxt_pos <= n && sum + bit[nxt_pos] < target)
-            {
-                sum += bit[nxt_pos];
-                pos = nxt_pos;
-            }
-        }
-
-        return pos + 1;
+        return queryPoint(n) - queryPoint(idx);
     }
+
+    //findKth can be used here, too
 };
 
 Fenwick tree;

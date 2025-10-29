@@ -1,3 +1,4 @@
+//general segment tree with lazy propagation
 #include <iostream>
 #include <algorithm>
 #include <vector>

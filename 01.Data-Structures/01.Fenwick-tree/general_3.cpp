@@ -1,4 +1,4 @@
-//the values in the bit can be only 0s and 1s
+//fenwick tree for xor
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -17,11 +17,11 @@ struct Fenwick
         std::fill(bit + 1, bit + n + 1, 0);
     }
 
-    void update(int idx, int val)
+    void updatePoint(int idx, int val)
     {
         for(; idx <= n ; idx += (idx & (-idx)))
         {
-            bit[idx] += val;
+            bit[idx] ^= val;
         }
     }
 
@@ -31,23 +31,18 @@ struct Fenwick
 
         for(; idx >= 1 ; idx -= (idx & (-idx)))
         {
-            s += bit[idx];
+            s ^= bit[idx];
         }
 
         return s;
     }
 
-    int querySmallerThan(int idx)
+    int queryRange(int l, int r)
     {
-        return queryPoint(idx - 1);
+        return queryPoint(r) ^ queryPoint(l - 1);
     }
 
-    int queryBiggerThan(int idx)
-    {
-        return queryPoint(n) - queryPoint(idx);
-    }
-
-    //findKth can be used here, too
+    ////findKth can !!NOT!! be used here, because XOR is not monotone operation (unlike addition)
 };
 
 Fenwick tree;

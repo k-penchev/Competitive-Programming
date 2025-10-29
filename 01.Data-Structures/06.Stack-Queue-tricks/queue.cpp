@@ -4,7 +4,6 @@ using namespace std;
 
 deque<int> dq;
 
-
 void solve()
 {
     vector<int> v = {3, 2, 4, 1, 10, 16, 4, 2, 19};

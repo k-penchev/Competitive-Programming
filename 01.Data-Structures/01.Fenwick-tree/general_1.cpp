@@ -1,4 +1,4 @@
-//the values in the bit can be various
+//fenwick tree for prefix sums (with various values)
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -21,7 +21,7 @@ struct Fenwick
     {
         for(; idx <= n ; idx += (idx & (-idx)))
         {
-            bit[idx] ^= val;
+            bit[idx] += val;
         }
     }
 
@@ -31,7 +31,7 @@ struct Fenwick
 
         for(; idx >= 1 ; idx -= (idx & (-idx)))
         {
-            s ^= bit[idx];
+            s += bit[idx];
         }
 
         return s;
@@ -39,10 +39,28 @@ struct Fenwick
 
     int queryRange(int l, int r)
     {
-        return queryPoint(r) ^ queryPoint(l - 1);
+        return queryPoint(r) - queryPoint(l - 1);
     }
 
-    ////findKth can !!NOT!! be used here, because XOR is not monotone operation (unlike addition)
+
+    int findKth(int target) // fast lower bound on fenwick tree
+    {
+        int sum = 0;
+        int pos = 0;
+
+        for(int i = LOG - 1 ; i >= 0 ; --i)
+        {
+            int nxt_pos = pos + (1 << i);
+
+            if(nxt_pos <= n && sum + bit[nxt_pos] < target)
+            {
+                sum += bit[nxt_pos];
+                pos = nxt_pos;
+            }
+        }
+
+        return pos + 1;
+    }
 };
 
 Fenwick tree;

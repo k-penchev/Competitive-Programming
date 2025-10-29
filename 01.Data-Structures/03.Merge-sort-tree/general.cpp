@@ -2,10 +2,12 @@
 #include <algorithm>
 #include <vector>
 
-struct Sparse
+struct MST
 {
 
 };
+
+MST tree;
 
 void solve()
 {
@@ -23,4 +25,6 @@ int main()
 {
     fastIO();
     solve();
+    
+    return 0;
 }

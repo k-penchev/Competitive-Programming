@@ -1,8 +1,9 @@
+//general segment tree
 #include <iostream>
 #include <algorithm>
 #include <vector>
 
-struct Sparse
+struct SegmentTree
 {
 
 };
