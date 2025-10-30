@@ -2,13 +2,6 @@
 #include <algorithm>
 #include <vector>
 
-struct MST
-{
-
-};
-
-MST tree;
-
 void solve()
 {
     

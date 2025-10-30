@@ -88,6 +88,7 @@ void solve()
         return r1.x < r2.x;
     });
  
+    hull.push({0, 0, +MAX_X});
     llong result = -INF, current;
     for(int i = 1 ; i <= n ; ++i)
     {

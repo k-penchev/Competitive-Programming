@@ -16,4 +16,4 @@ R --> L
 
 Important things:
 1)Another difference between L --> R and R --> is the binary search condition.
-2)If we know the queries in advance we can use a "ptr" to track them and do not need binary search. 
+2)If we know the queries in advance we can use a "ptr" to track them and thus do not need binary search. 
