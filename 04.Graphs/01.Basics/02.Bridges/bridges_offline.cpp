@@ -1,3 +1,4 @@
+//the graph is known in advance
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -8,7 +9,7 @@ int n, m;
 std::vector<int> g[MAXN];
 bool visited[MAXN];
 
-std::vector<int> articulationPoints;
+std::vector<std::pair<int, int>> bridges;
 int in[MAXN], low[MAXN];
 int timer = 1;
 
@@ -17,11 +18,12 @@ void dfs(int node, int parent)
     visited[node] = 1;
     in[node] = low[node] = timer++;
 
-    int childrenCnt = 0;
+    bool skippedParent = false;
     for(int to : g[node])
     {
-        if(to == parent)
+        if(to == parent && !skippedParent)
         {
+            skippedParent = 1;
             continue;
         }
 
@@ -35,18 +37,11 @@ void dfs(int node, int parent)
 
             low[node] = std::min(low[node], low[to]);
 
-            if(low[to] >= in[node] && parent != -1) //excluding the root
+            if(low[to] > in[node])
             {
-                articulationPoints.push_back(node);
+                bridges.push_back({node, to});
             }
-
-            childrenCnt += 1;
         }
-    }
-
-    if(parent == -1 && childrenCnt >= 2) //special case for root
-    {
-        articulationPoints.push_back(node);
     }
 }
 
@@ -64,9 +59,9 @@ void solve()
 
     dfs(1, -1);
 
-    for(auto &x : articulationPoints)
+    for(auto &x : bridges)
     {
-        std::cout << x << "\n";
+        std::cout << x.first << " " << x.second << "\n";
     }
 }
 

@@ -3,24 +3,102 @@
 #include <vector>
 #include <cmath>
 
-const int MAXN = 5 * 1e5 + 5;
+const int MAXN = 5 * 1e5 + 10;
+const int MAXM = 5 * 1e5 + 10;
 
 int n, m;
-std::vector<int> g[MAXN];
-int root;
-std::vector<int> tour, leaves;
-bool isLeaf[MAXN];
 
-void dfs(int node, int par)
+struct Edge
 {
-    tour.push_back(node);
-    isLeaf[node] = true;
+    int to;
+    int id;
+};
 
-    for(int to : g[node])
+std::vector<Edge> g[MAXN];
+std::pair<int, int> edge[MAXM];
+bool visited[MAXN];
+
+bool bridge[MAXM];
+int in[MAXN], low[MAXN];
+int timer = 1;
+
+int component[MAXN];
+int reversed[MAXN]; 
+int counter = 1;
+
+std::vector<int> tree[MAXN];
+std::vector<int> leaves;
+
+void dfs1(int node, int parent)
+{
+    visited[node] = 1;
+    in[node] = low[node] = timer++;
+
+    bool skippedParent = false;
+    for(auto &[to, id] : g[node])
+    {   
+        if(to == parent && !skippedParent)
+        {
+            skippedParent = 1;
+            continue;
+        }
+
+        if(visited[to])
+        {
+            low[node] = std::min(low[node], in[to]);
+        }
+        else
+        {
+            dfs1(to, node);
+            low[node] = std::min(low[node], low[to]);
+
+            if(low[to] > in[node])
+            {
+                bridge[id] = 1;
+            }
+        }
+    }
+}
+
+void dfs2(int node)
+{
+    visited[node] = 1;
+    component[node] = counter;
+
+    if(!reversed[counter])
     {
-        if(to == par) continue;
-        isLeaf[node] = false;
-        dfs(to, node);
+        reversed[counter] = node;
+    }
+
+    for(auto &[to, id] : g[node])
+    {
+        if(bridge[id])
+        {
+            continue;
+        }
+
+        if(!visited[to])
+        {
+            dfs2(to);
+        }
+    }
+}
+
+void dfs3(int node, int par)
+{
+    for(int &to : tree[node])
+    {
+        if(to == par)
+        {
+            continue;
+        }
+
+        dfs3(to, node);
+    }
+
+    if(tree[node].size() == 1)
+    {
+        leaves.push_back(node);
     }
 }
 
@@ -32,33 +110,60 @@ void solve()
     {
         int a, b;
         std::cin >> a >> b;
-        g[a].push_back(b);
-        g[b].push_back(a);
+        g[a].push_back({b, i});
+        g[b].push_back({a, i});
+        edge[i] = {a, b};
     }
 
-    for(int i = 1 ; i <= n ; ++i) 
+    for(int i = 1 ; i <= n ; ++i)
     {
-        if(g[i].size() > 1)
+        if(!visited[i])
+        {
+            dfs1(i, -1);
+        }
+    }
+
+    std::fill(visited + 1, visited + n + 1, false);
+    
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        if(!visited[i])
+        {
+            dfs2(i);
+            counter += 1;
+        }
+    }
+
+    for(int i = 1 ; i <= m ; ++i)
+    {
+        if(bridge[i])
+        {
+            int u = component[edge[i].first];
+            int v = component[edge[i].second];
+            tree[u].push_back(v);
+            tree[v].push_back(u);
+        }
+    }
+    
+    int root;
+    for(int i = 1; i <= counter; ++i)
+    {
+        if(tree[i].size() >= 2)
         {
             root = i;
             break;
         }
     }
 
-    dfs(root, -1);
-
-    for(int x : tour)
-    {
-        if(isLeaf[x]) leaves.push_back(x);
-    }
+    dfs3(root, -1);
 
     int T = leaves.size();
-    int H = std::ceil(T / 2.0);
-
+    
+    int H = (T + 1) / 2;
     std::cout << H << "\n";
     for(int i = 0 ; i < H ; ++i)
     {
-        std::cout << leaves[i] << " " << leaves[(i + H) % T] << "\n";
+        std::cout << reversed[leaves[i]] << " " << reversed[leaves[(i + H) % T]] << "\n";
     }
 }
 
