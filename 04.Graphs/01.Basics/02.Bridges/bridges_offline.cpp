@@ -18,7 +18,7 @@ void dfs(int node, int parent)
     visited[node] = 1;
     in[node] = low[node] = timer++;
 
-    bool skippedParent = false;
+    bool skippedParent = false; //needed, because we can have multi-edge
     for(int to : g[node])
     {
         if(to == parent && !skippedParent)

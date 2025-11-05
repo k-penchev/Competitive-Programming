@@ -35,7 +35,7 @@ void dfs(int node, int parent)
 
             low[node] = std::min(low[node], low[to]);
 
-            if(low[to] >= in[node] && parent != -1) //excluding the root
+            if(low[to] >= in[node] && parent != -1) //excluding the root, because we handle it in special case below
             {
                 articulationPoints.push_back(node);
             }
