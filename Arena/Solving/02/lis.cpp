@@ -1,40 +1,73 @@
-#include <bits/stdc++.h>
-
-using namespace std;
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <numeric>
+#include <random>
 
 int get_lis_length(const std::vector<int>& p);
 
+std::vector<int> rotateToBack(std::vector<int> p, int pos)
+{
+    int temp = p[pos];
+
+    for(int i = pos ; i < p.size() - 1 ; ++i)
+    {
+        p[i] = p[i + 1];
+    }
+
+    p[p.size() - 1] = temp;
+
+    return p;
+}
+
+std::vector<int> rotateToFront(std::vector<int> p, int pos)
+{
+    int temp = p[pos];
+
+    for(int i = pos ; i >= 1 ; --i)
+    {
+        p[i] = p[i - 1];
+    }
+
+    p[0] = temp;
+
+    return p;
+}
+
 int find_maximum(int n)
 {
-    vector<int> perm(n);
-    iota(perm.begin(), perm.end(), 0);
+    std::vector<int> p(n);
+    std::iota(p.begin(), p.end(), 0);
 
-    int lisLenBefore = 0, lisLenAfter = 0, idx = 0;
-
-    do
+    int prev = get_lis_length(p);
+    
+    while(true)
     {
-        lisLenBefore = get_lis_length(perm);
+        std::vector<int> w = rotateToFront(p, n - 1);
+        int curr = get_lis_length(w);
 
-
-        if(lisLenBefore == n)
+        if(prev > curr)
         {
-            idx = perm[n - 1];
             break;
         }
 
-        swap(perm[0], perm[n - 1]);
-
-        lisLenAfter = get_lis_length(perm);
-
-        if(lisLenBefore == lisLenAfter + 1)
-        {
-            idx = perm[0];
-            break;
-        }
-
-        shuffle(perm.begin(), perm.end(), std::mt19937{std::random_device{}()});
+        p = w;
+        prev = curr;
     }
-    while(true);
 
-    return idx;
+    
+    for(int i = 0 ; i < n ; ++i)
+    {
+        std::vector<int> w = rotateToBack(p, i);
+        int curr = get_lis_length(w);
+
+        if(prev < curr)
+        {
+            p = w;
+            prev = curr;
+            i -= 1;
+        }
+    }
+
+    return p[n - 1];
 }
