@@ -1,102 +1,123 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <queue>
 
-const int MAXN = 80 + 10;
-const int INF = 1e9;
+typedef long long llong;
+const int MAXN = 80 + 5;
+const int MAXM = 500 + 5;
+const llong INF = 1e18 + 10;
 
 int n, m;
+bool isToll[MAXN];
 
-struct Node
+struct Edge
 {
+    int idx;
+    int from;
     int to;
     int w;
-    int idx;
 };
 
-std::vector<Node> g[MAXN];
-int dist[MAXN];
-std::pair<int, int> par[MAXN];
-std::priority_queue<std::pair<int, int>> pq;
-std::vector<int> edges;
+std::vector<Edge> edges;
+llong prevDist[MAXN];
+llong currDist[MAXN];
+std::pair<int, int> par[2 * MAXM][MAXN];
+int source, destination;
 
-void dijkstra(int source, int destination)
+int bestStep;
+llong ans;
+std::vector<int> indexies;
+
+void bellman_ford()
 {
-    std::fill(dist + 1, dist + n + 1, INF);
+    std::fill(prevDist + 1, prevDist + n + 1, INF);
+    std::fill(currDist + 1, currDist + n + 1, INF);
+    prevDist[source] = 0;
 
-    for(int i = 1 ; i <= n ; ++i)
+    for(int step = 1 ; step <= 2 * m ; ++step)
     {
-        par[i] = {-1, -1};
-    }
-
-    pq.push({0, source});
-    dist[source] = 0;
-
-    while(pq.size())
-    {
-        int curr_node = pq.top().second;
-        int curr_dist = -pq.top().first;
-        pq.pop();
-
-        if(curr_dist > dist[curr_node]) continue;
-
-        for(auto& [to, w, idx] : g[curr_node])
+        for(int i = 1 ; i <= n ; ++i)
         {
-            if(dist[curr_node] + w < dist[to])
-            {
-                dist[to] = dist[curr_node] + w;
-                par[to] = {curr_node, idx};
+            par[step][i] = {-1, -1};
+        }
+    }
+    
+    for(int step = 1 ; step <= 2 * m ; ++step)
+    {
+        for(int i = 1 ; i <= n ; ++i)
+        {
+            currDist[i] = prevDist[i];
+        }
 
-                pq.push({-dist[to], to});
+        for(auto &[idx, from, to, w] : edges)
+        {
+            if(prevDist[from] == INF) continue;
+
+            if(prevDist[from] + w < currDist[to])
+            {
+                currDist[to] = prevDist[from] + w;
+                par[step][to] = {from, idx};
+
+                if(to == destination)
+                {
+                    bestStep = step;
+                }
             }
         }
-    }
 
-    int final_dist = dist[destination], cnt_edges = 0;
-
-    while(destination != -1)
-    {
-        auto [prev, idx] = par[destination];
-        
-        if(idx != -1)
+        for(int i = 1 ; i <= n ; ++i)
         {
-            cnt_edges += 1;
-            edges.push_back(idx);
+            prevDist[i] = currDist[i];
         }
-
-        destination = prev;
     }
 
-    std::cout << final_dist << " " << cnt_edges << "\n";
+    ans = prevDist[destination];
+}
 
-    std::reverse(edges.begin(), edges.end());
-    for(int edge : edges)
+void backtrack(int node, int step)
+{
+    if(step == 0)
     {
-        std::cout << edge << " " << "1" << "\n";
+        return;
     }
 
-    std::cout << "\n";
+    auto &[prev, idx] = par[step][node];
+ 
+    if(prev == -1)
+    {
+        backtrack(node, step - 1);
+    }
+
+    indexies.push_back(idx);
+    backtrack(prev, step - 1);
 }
 
 void solve()
 {
     std::cin >> n >> m;
 
-    for(int i = 1 ; i <= n ; ++i)
+    for(int i = 1 ; i <= n ; ++i)   
     {
-        int x;
-        std::cin >> x;
+        std::cin >> isToll[i];
     }
 
     for(int i = 1 ; i <= m ; ++i)
     {
-        int u, v, w;
-        std::cin >> u >> v >> w;
-        g[u].push_back({v, w, i});
+        int a, b, c;
+        std::cin >> a >> b >> c;
+        edges.push_back({i, a, b, c});
     }
 
-    dijkstra(1, n);
+    source = 1, destination = n;
+    bellman_ford();
+    backtrack(n, bestStep);
+
+    std::cout << ans << " " << indexies.size() << "\n";
+    std::reverse(indexies.begin(), indexies.end());
+    for(auto &i : indexies)
+    {
+        std::cout << i << " " << "1" << "\n";
+    }
 }
 
 void fastIO()

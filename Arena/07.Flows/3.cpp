@@ -11,7 +11,8 @@ const int INF = 1e9;
 
 int n, m;
 char table[MAXN][MAXN];
-int inID[MAXN][MAXN], outID[MAXN][MAXN];
+int inID[MAXN][MAXN];
+int outID[MAXN][MAXN];
 int globalID = 0;
 
 struct Edge

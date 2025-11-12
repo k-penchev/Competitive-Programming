@@ -25,6 +25,8 @@ void bellman_ford(int source)
     {
         for(auto& [u, v, w] : edges)
         {
+            if(dist[u] == INF) continue;
+
             dist[v] = std::min(dist[v], dist[u] + w);
         }
     }
