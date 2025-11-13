@@ -1,142 +1,109 @@
-#include <bits/stdc++.h>
-
-using namespace std;
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
 #define int long long
 
 const int MAXN = 5 * 1e5 + 10;
+const int INF = 1e18;
 
 int n, q;
 int a[MAXN];
 
-struct Node
-{
-    vector<int> v;
-    int maxInv;
-    int maxNum;
-
-    Node()
-    {
-        v = {};
-        maxInv = 0;
-        maxNum = INT_MIN;
-    }
-};
-
 struct MST
 {
-    Node seg[4 * MAXN];
-
-    int binary(Node& node, int number)
+    struct Node
     {
-        /*
-        cout << "\n";
-        cout << "Entering : " << number << "\n";
+        std::vector<int> v;
+        int maxInversion;
+        int maxElement;
+    };
 
-        for(int x : node.v)
+    Node tree[4 * MAXN];
+
+    int binary(const std::vector<int> &v, int k)
+    {
+        int l = -1, r = v.size();
+
+        while(l + 1 < r)
         {
-            cout << x << " ";
+            int m = (l + r) / 2;
+
+            if(v[m] < k) l = m;
+            else r = m;
         }
 
-        cout << "\n";
-        */
-
-        int lPtr = -1, rPtr = node.v.size();
-
-        while(rPtr > lPtr + 1)
-        {
-            int mid = (lPtr + rPtr) / 2;
-
-            if(node.v[mid] < number)
-            {
-                lPtr = mid;
-            }
-            else
-            {
-                rPtr = mid;
-            }
-        }
-
-        //cout << lPtr << " " << rPtr << "\n";
-        //cout << "\n";
-        return lPtr;
+        return l;
     }
 
-    Node combine(Node& left, Node& right)
+    Node mergeBuild(const Node &left, const Node &right)
     {
-        if (left.v.empty())  return right;
-        if (right.v.empty()) return left;
+        Node result;
 
-        Node res;
+        int index = binary(right.v, left.maxElement);
 
-        res.maxNum = max(left.maxNum, right.maxNum);
-
-        int idx = binary(right, left.maxNum);
-        int cross = INT_MIN;     
-        
-        if(idx >= 0)
-            cross = left.maxNum + right.v[idx];
-        
-        res.maxInv = max({left.maxInv, right.maxInv, cross});
-
-        int lPtr = 0, rPtr = 0;
-        res.v.reserve(left.v.size() + right.v.size());
-
-        for(int i = 1 ; i <= left.v.size() + right.v.size(); ++i)
+        int cross;
+        if(index != -1)
         {
-            if(lPtr == left.v.size())
+            cross = left.maxElement + right.v[index];
+        }
+        else
+        {
+            cross = 0;
+        }
+
+        result.maxInversion = std::max({left.maxInversion, right.maxInversion, cross});
+
+        int l = 0, r = 0;
+        for(int i = 0 ; i < left.v.size() + right.v.size() ; ++i)
+        {
+            if(l == left.v.size())
             {
-                res.v.push_back(right.v[rPtr++]);
+                result.v.push_back(right.v[r++]);
                 continue;
             }
 
-            if(rPtr == right.v.size())
+            if(r == right.v.size())
             {
-                res.v.push_back(left.v[lPtr++]);
+                result.v.push_back(left.v[l++]);
                 continue;
             }
 
-            if(left.v[lPtr] < right.v[rPtr])
+            if(left.v[l] <= right.v[r])
             {
-                res.v.push_back(left.v[lPtr++]);
+                result.v.push_back(left.v[l++]);
             }
             else
             {
-                res.v.push_back(right.v[rPtr++]);
+                result.v.push_back(right.v[r++]);
             }
         }
 
-        return res;
+        result.maxElement = std::max(left.maxElement, right.maxElement);
+        return result;
     }
 
-    void build(int idx, int low, int high)
+    void build(int idx, int low, int high, int * arr)
     {
         if(low == high)
         {
-            Node new_node;
-
-            new_node.v.push_back(a[low]);
-            new_node.maxInv = 0;
-            new_node.maxNum = a[low];
-
-            seg[idx] = new_node;
+            tree[idx].v.push_back(arr[low]);
+            tree[idx].maxElement = arr[low];
+            tree[idx].maxInversion = 0;
 
             return;
         }
 
         int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
 
-        build(left, low, mid);
-        build(right, mid + 1, high);
+        build(2 * idx, low, mid, arr);
+        build(2 * idx + 1, mid + 1, high, arr);
 
-        seg[idx] = combine(seg[left], seg[right]);
+        tree[idx] = mergeBuild(tree[2 * idx], tree[2 * idx + 1]);
     }
 
-    vector<int> searchNodes;
-    
-    void query(int idx, int low, int high, int queryL, int queryR, int k)
+    std::vector<int> nodes;
+    void query(int idx, int low, int high, int queryL, int queryR)
     {
         if(queryL > high || queryR < low)
         {
@@ -144,40 +111,47 @@ struct MST
         }
         else if(queryL <= low && high <= queryR)
         {
-            searchNodes.push_back(idx);
+            nodes.push_back(idx);
             return;
         }
 
         int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
 
-
-        query(left, low, mid, queryL, queryR, k);
-        query(right, mid + 1, high, queryL, queryR, k);
-
-        return;
+        query(2 * idx, low, mid, queryL, queryR);
+        query(2 * idx + 1, mid + 1, high, queryL, queryR);
     }
 
-    void build()
+    void build(int * arr)
     {
-        build(1, 1, n);
+        build(1, 1, n, arr);
     }
 
     int query(int l, int r, int k)
     {
-        searchNodes.clear();
+        nodes.clear();
+        query(1, 1, n, l, r);
 
-        query(1, 1, n, l, r, k);
+        int currentElement = tree[nodes[0]].maxElement;
+        int currentInversion = tree[nodes[0]].maxInversion;
 
-        Node res;
-
-        for(int i : searchNodes)
+        for(int i = 1 ; i < nodes.size() ; ++i)
         {
-            res = combine(res, seg[i]);
+            int index = binary(tree[nodes[i]].v, currentElement);
+
+            int cross;
+            if(index != -1)
+            {
+                cross = currentElement + tree[nodes[i]].v[index];
+            }
+            else
+            {
+                cross = 0;
+            }
+            currentInversion = std::max({currentInversion, tree[nodes[i]].maxInversion, cross});
+            currentElement = std::max(currentElement, tree[nodes[i]].maxElement);
         }
 
-        return (res.maxInv <= k);
+        return currentInversion <= k;
     }
 };
 
@@ -185,31 +159,29 @@ MST tree;
 
 void solve()
 {
-    cin >> n >> q;
+    std::cin >> n >> q;
 
     for(int i = 1 ; i <= n ; ++i)
     {
-        cin >> a[i];
+        std::cin >> a[i];
     }
 
-    tree.build();
-
-    int l, r, k;
-
+    tree.build(a);
     for(int i = 1 ; i <= q ; ++i)
     {
-        cin >> l >> r >> k;
-        cout <<  tree.query(l, r, k);
+        int l, r, k;
+        std::cin >> l >> r >> k;
+        std::cout << tree.query(l, r, k);
     }
 
-    cout << "\n";
+    std::cout << "\n";
 }
 
 void fastIO()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
 }
 
 signed main()

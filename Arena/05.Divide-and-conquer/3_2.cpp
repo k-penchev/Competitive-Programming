@@ -1,172 +1,160 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <cassert>
 
 const int MAXN = 1e5 + 10;
 
 int n;
 int a[MAXN];
-int byIndex[MAXN]; 
-
-struct Fenwick
-{
-    int bitSize;
-    std::vector<int> bit;
-
-    void resize(int size)
-    {
-        bitSize = size;
-        bit.resize(size + 1, 0);
-    }
-
-    void update(int idx, int val)
-    {
-        for(; idx <= bitSize ; idx += (idx & (-idx)))
-        {
-            bit[idx] += val;
-        }
-    }
-
-    int query(int idx)
-    {
-        int s = 0;
-
-        for(; idx >= 1 ; idx -= (idx & (-idx)))
-        {
-            s += bit[idx];
-        }
-
-        return s;
-    }
-
-    int querySmaller(int idx)
-    {
-        return query(idx - 1);
-    }
-
-    int queryBigger(int idx)
-    {
-        return query(bitSize) - query(idx);
-    }
-};
+int byIndex[MAXN];
 
 struct MST
 {
-    struct Node
+    struct BIT
     {
-        std::vector<int> v;
-        Fenwick fenwick;
+        std::vector<int> bit;
+
+        void init(int sz)
+        {
+            bit.resize(sz + 1, 0);
+        }
+
+        void update(int idx, int val)
+        {
+            idx++;
+            for(; idx < bit.size() ; idx += idx & (-idx))
+            {
+                bit[idx] += val;
+            }
+        }
+
+        int query(int idx)
+        {
+            idx++;
+            int res = 0;
+            for(; idx > 0 ; idx -= idx & (-idx))
+            {
+                res += bit[idx];
+            }
+
+            return res;
+        }
+
+        int querySmaller(int idx)
+        {
+            return query(idx - 1);
+        }
+
+        int queryBigger(int idx)
+        {
+            return query(bit.size() - 2) - query(idx - 1);
+        }
     };
 
-    Node tree[4 * MAXN];
+    std::vector<int> tree[4 * MAXN];
+    BIT fenwick[4 * MAXN];
 
-    Node combine(const Node& left, const Node& right)
+    void build(int idx, int low, int high, int * arr)
     {
-        Node result;
+        fenwick[idx].init(high - low + 1);
+        tree[idx].reserve(high - low + 1);
 
-        int size = left.v.size() - 1 + right.v.size() - 1;
-        result.v.resize(size + 1);
-        result.fenwick.resize(size);
-
-        int l = 1, r = 1;
-        for(int i = 1 ; i <= size ; ++i)
+        if(low == high)
         {
-            if(l == left.v.size())
+            tree[idx].push_back(arr[low]);
+            fenwick[idx].update(0, +1);
+            return;
+        }
+
+        int mid = (low + high) / 2;
+
+        build(2 * idx, low, mid, arr);
+        build(2 * idx + 1, mid + 1, high, arr);
+
+        int lPtr = 0, rPtr = 0;
+        for(int i = 0 ; i < tree[2 * idx].size() + tree[2 * idx + 1].size() ; ++i)
+        {
+            if(lPtr == tree[2 * idx].size())
             {
-                result.v[i] = right.v[r++];
+                tree[idx].push_back(tree[2 * idx + 1][rPtr++]);
                 continue;
             }
 
-            if(r == right.v.size())
+            if(rPtr == tree[2 * idx + 1].size())
             {
-                result.v[i] = left.v[l++];
+                tree[idx].push_back(tree[2 * idx][lPtr++]);
                 continue;
             }
 
-            if(left.v[l] <= right.v[r])
+            if(tree[2 * idx][lPtr] <= tree[2 * idx + 1][rPtr])
             {
-                result.v[i] = left.v[l++];
+                tree[idx].push_back(tree[2 * idx][lPtr++]);
             }
             else
             {
-                result.v[i] = right.v[r++];
+                tree[idx].push_back(tree[2 * idx + 1][rPtr++]);
             }
         }
 
-        for(int i = 1 ; i <= size ; ++i)
+        for(int i = 0 ; i < tree[idx].size() ; ++i)
         {
-            result.fenwick.update(i, +1);
+            fenwick[idx].update(i, +1);
+        }
+    }
+
+    int findEqual(const std::vector<int> &v, int k)
+    {
+        int l = -1, r = v.size();
+
+        while(l + 1 < r)
+        {
+            int m = (l + r) / 2;
+
+            if(v[m] >= k) r = m;
+            else l = m;
         }
 
-        return result;
+        assert(v[r] == k);
+        return r;
     }
 
-    void build(int idx, int low, int high, int arr[])
+    void update(int idx, int low, int high, int value, int pos)
     {
-        if(low == high)
-        {   
-            tree[idx].v.resize(2);
-            tree[idx].fenwick.resize(1);
-
-            tree[idx].v[1] = arr[low];
-            tree[idx].fenwick.update(1, +1);
-            return;
-        }
-
-        int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
-
-        build(left, low, mid, arr);
-        build(right, mid + 1, high, arr);
-
-        tree[idx] = combine(tree[left], tree[right]);
-    }
-
-    int binary(std::vector<int>& vec, int k)
-    {
-        return std::lower_bound(vec.begin(), vec.end(), k) - vec.begin();
-    }
-
-    //delete number
-    void update(int idx, int low, int high, int delNum)
-    {
-        tree[idx].fenwick.update(binary(tree[idx].v, delNum), -1);
-
+        fenwick[idx].update(findEqual(tree[idx], value), -1);
         if(low == high)
         {
             return;
         }
 
         int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
-
-        if(byIndex[delNum] <= mid)
-        {
-            update(left, low, mid, delNum);
-        }
-        else
-        {
-            update(right, mid + 1, high, delNum);
-        }
+        if(pos <= mid) update(2 * idx, low, mid, value, pos);
+        else update(2 * idx + 1, mid + 1, high, value, pos);
     }
 
-    int calculateAns(Node& node, int qryNum, bool qryType)
+    int getAns(int node, int k, bool findLess)
     {
-        if(qryType == 0) 
+        int l = -1, r = tree[node].size();
+
+        while(l + 1 < r)
         {
-            return node.fenwick.querySmaller(binary(node.v, qryNum));
+            int m = (l + r) / 2;
+
+            if(tree[node][m] >= k) r = m;
+            else l = m;
+        }
+
+        if(findLess)
+        {
+            return fenwick[node].querySmaller(r);
         }
         else
-        {   
-            return node.fenwick.queryBigger(binary(node.v, qryNum));
+        {
+            return fenwick[node].queryBigger(r);
         }
     }
 
-    //query for number
-    //0 -> smaller, 1 -> bigger
-    int query(int idx, int low, int high, int queryL, int queryR, int qryNum, bool qryType)
+    int query(int idx, int low, int high, int queryL, int queryR, int val, bool findLess)
     {
         if(queryL > high || queryR < low)
         {
@@ -174,70 +162,65 @@ struct MST
         }
         else if(queryL <= low && high <= queryR)
         {
-            return calculateAns(tree[idx], qryNum, qryType);
+            return getAns(idx, val, findLess);
         }
 
         int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
-
-        return query(left, low, mid, queryL, queryR, qryNum, qryType) +
-               query(right, mid + 1, high, queryL, queryR, qryNum, qryType);
+        return query(2 * idx, low, mid, queryL, queryR, val, findLess)
+               + query(2 * idx + 1, mid + 1, high, queryL, queryR, val, findLess);
     }
 
-    void build(int arr[])
+    void build(int * arr)
     {
         build(1, 1, n, arr);
     }
 
-    void update(int delNum)
+    void update(int value, int pos)
     {
-        update(1, 1, n, delNum);
+        update(1, 1, n, value, pos);
     }
 
-    int query(int l, int r, int qryNum, bool qryType)
+    int query(int l, int r, int val, bool findLess)
     {
-        return query(1, 1, n, l, r, qryNum, qryType);
+        return query(1, 1, n, l, r, val, findLess);
     }
 };
 
-MST mst;
-Fenwick invFenwick;
-int answer = 0;
+MST tree;
+MST::BIT inversions;
+long long ans = 0;
 
 void solve()
 {
     std::cin >> n;
-
+    
     for(int i = 1 ; i <= n ; ++i)
     {
         std::cin >> a[i];
         byIndex[a[i]] = i;
     }
 
-    invFenwick.resize(n);
+    inversions.init(n);
     for(int i = n ; i >= 1 ; --i)
     {
-        answer += invFenwick.query(a[i] - 1);
-        invFenwick.update(a[i], +1);
+        ans += inversions.querySmaller(a[i] - 1);
+        inversions.update(a[i] - 1, +1);
     }
 
-    mst.build(a);
-
-    std::cout << answer << " ";
+    std::cout << ans << " ";
+    tree.build(a);
     for(int i = 1 ; i <= n - 2 ; ++i)
     {
         int x;
         std::cin >> x;
 
-        int p1 = mst.query(1, byIndex[x] - 1, x, 1);
-        int p2 = mst.query(byIndex[x] + 1, n, x, 0);
+        int cnt = 0;
+        if(byIndex[x] - 1 >= 1) cnt += tree.query(1, byIndex[x] - 1, x, false);
+        if(byIndex[x] + 1 <= n) cnt += tree.query(byIndex[x] + 1, n, x, true);
+        tree.update(x, byIndex[x]);
 
-        answer -= p1 + p2;
-
-        mst.update(x);
-        std::cout << answer << " ";
-        
+        ans -= cnt;
+        std::cout << ans << " ";
     }
 
     std::cout << "\n";
@@ -254,6 +237,4 @@ int main()
 {
     fastIO();
     solve();
-    
-    return 0;
 }
