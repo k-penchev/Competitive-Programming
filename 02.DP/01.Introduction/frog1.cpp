@@ -5,24 +5,28 @@
 #define int long long
 
 const int MAXN = 1e5 + 10;
-const int INF = 1e18 + 10;
+const int INF = 1e18;
 
-int n, k;
+int n;
 int a[MAXN];
-bool memo[MAXN];
 int dp[MAXN];
+bool memo[MAXN];
 
 int f(int idx)
 {
     if(idx == 1) return 0;
     if(memo[idx]) return dp[idx];
-
+    
     memo[idx] = 1;
 
-    for(int j = 1 ; j <= k ; ++j)
+    if(idx - 1 >= 1)
     {
-        if(idx - j < 1) break;
-        dp[idx] = std::min(dp[idx], f(idx - j) + std::abs(a[idx] - a[idx - j]));
+        dp[idx] = std::min(dp[idx], f(idx - 1) + std::abs(a[idx] - a[idx - 1]));
+    }
+
+    if(idx - 2 >= 1)
+    {
+        dp[idx] = std::min(dp[idx], f(idx - 2) + std::abs(a[idx] - a[idx - 2]));
     }
 
     return dp[idx];
@@ -30,7 +34,7 @@ int f(int idx)
 
 void solve()
 {
-    std::cin >> n >> k;
+    std::cin >> n;
 
     for(int i = 1 ; i <= n ; ++i)
     {
