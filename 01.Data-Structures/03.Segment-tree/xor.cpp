@@ -27,12 +27,6 @@ struct SegmentTree
     Node seg[4 * MAXN];
     int lazy[MAX_LOG + 1];
 
-    SegmentTree()
-    {
-        memset(seg, 0, sizeof(seg));
-        memset(lazy, 0, sizeof(lazy));
-    }
-
     Node combine(Node& left, Node& right)
     {
         Node res;

@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <vector>
 
-typedef long long llong;
 const int MAXN = 80 + 5;
 const int MAXM = 500 + 5;
 const int INF = 1e9 + 10;
@@ -14,31 +13,14 @@ struct Edge
 {
     int to;
     int w;
-    int tollCnt;
+    int tolls;
 };
 
 std::vector<Edge> g[MAXN];
 
-void bellman_ford()
-{
-
-}
-
-void backtrack(int node, int step)
-{
-
-}
-
 void build(int a, int b, int c)
 {
-    if(toll[b])
-    {
-
-    }
-    else
-    {
-
-    }
+    
 }
 
 void solve()
@@ -49,22 +31,12 @@ void solve()
     {
         std::cin >> toll[i];
     }
-    
+
     for(int i = 1 ; i <= m ; ++i)
     {
         int a, b, c;
         std::cin >> a >> b >> c;
         build(a, b, c);
-    }
-
-    bellman_ford();
-    backtrack(1, lastStep);
-
-    std::cout << ans << " " << indexes.size();
-    std::reverse(indexes.begin(), indexes.end());
-    for(auto &i : indexes)
-    {
-        std::cout << i.first << " " << i.second << "\n";
     }
 }
 
@@ -79,6 +51,4 @@ int main()
 {
     fastIO();
     solve();
-    
-    return 0;
 }
