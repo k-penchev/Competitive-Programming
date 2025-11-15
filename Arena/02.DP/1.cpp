@@ -2,7 +2,13 @@
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 80;
+#define int long long
+
+const int MAXN = 80 + 10;
+const int MAXK = 80 + 10;
+const int MAXT = 250 + 10;
+const int MAXS = MAXK * MAXT + 10;
+const int INF = 1e18 + 10;
 
 int n, k;
 
@@ -13,6 +19,22 @@ struct Person
 };
 
 Person p[MAXN];
+int dp[MAXN][MAXK][MAXS];
+bool memo[MAXN][MAXK][MAXS];
+
+int f(int pos, int cnt, int t)
+{
+    if(cnt < 0) return INF;
+    if(pos == n + 1 && cnt == 0) return 0;
+    else if(pos == n + 1) return INF;
+
+    if(memo[pos][cnt][t]) return dp[pos][cnt][t];
+
+    memo[pos][cnt][t] = 1;
+
+    dp[pos][cnt][t] = std::min(f(pos + 1, cnt, t), std::max(p[pos].w + t, f(pos + 1, cnt - 1, t + p[pos].t)));
+    return dp[pos][cnt][t];
+}
 
 void solve()
 {
@@ -28,19 +50,10 @@ void solve()
         int f = std::max(a.w, b.w + a.t);
         int s = std::max(b.w, a.w + b.t);
 
-        return f < s;
+        return f <= s;
     });
 
-    int total = 0, best = 0;
-    for(int i = 1 ; i <= n ; ++i)
-    {
-        int current = total + p[i].w;
-        best = std::max(best, current);
-
-        total += p[i].t;
-    }
-
-    std::cout << best << "\n";
+    std::cout << f(1, k, 0) << "\n";
 }
 
 void fastIO()
@@ -50,7 +63,7 @@ void fastIO()
     std::cout.tie(NULL);
 }
 
-int main()
+signed main()
 {
     fastIO();
     solve();
