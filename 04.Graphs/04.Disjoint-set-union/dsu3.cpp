@@ -8,7 +8,7 @@ const int MAXN = 3 * 1e5 + 10;
 int n, q;
 int ans[MAXN];
 std::vector<int> query;
-std::map<std::pair<int, int>, int> my_map;
+std::map<std::pair<int, int>, int> map;
 
 struct DSU
 {
@@ -197,14 +197,14 @@ void solve()
         {   
             std::cin >> x >> y;
             if(x > y) std::swap(x, y);
-            my_map[{x, y}] = i;
+            map[{x, y}] = i;
         }
         else if(type == '-')
         {
             std::cin >> x >> y;
             if(x > y) std::swap(x, y);
-            tree.update(my_map[{x, y}], i - 1, x, y);
-            my_map.erase({x, y});
+            tree.update(map[{x, y}], i - 1, x, y);
+            map.erase({x, y});
         }
         else
         {
@@ -212,7 +212,7 @@ void solve()
         }
     }
 
-    for(auto &[key, value] : my_map)
+    for(auto &[key, value] : map)
     {
         tree.update(value, q, key.first, key.second);
     }
