@@ -10,9 +10,30 @@ int color[MAXN]; //white(unvisited), gray(visited and unfinished), black(visited
 int parent[MAXN];
 int startNode, endNode; // [start, end] of a cycle
 
-bool dfs(int node, int parent)
+bool dfs(int node)
 {
+    color[node] = 1;
 
+    for(int to : g[node])
+    {
+        if(color[to] == 0)
+        {
+            parent[to] = node;
+            if(dfs(to))
+            {
+                return true;
+            }
+        }
+        else if(color[to] == 1)
+        {
+            startNode = to;
+            endNode = node;
+            return true;
+        }
+    }
+
+    color[node] = 2;
+    return false;
 }
 
 void solve()
@@ -26,7 +47,44 @@ void solve()
         g[a].push_back(b);
     }
 
-    std::cout << dfs(1, -1) << "\n";
+    int hasCycle = false;
+    for(int i = 1 ; i <= n ; ++i)
+    {
+        if(color[i] == 0)
+        {
+            if(dfs(i))
+            {
+                hasCycle = true;
+                break;
+            }
+        }
+    }
+
+    if(!hasCycle)
+    {
+        std::cout << "Cycle not found." << "\n";
+        return;
+    }
+
+    std::vector<int> cycle;
+    for(int node = endNode ; node != startNode ; node = parent[node])
+    {
+        cycle.push_back(node);
+    }
+
+    cycle.push_back(startNode);
+    std::reverse(cycle.begin(), cycle.end());
+
+    //optional
+    cycle.push_back(startNode); 
+
+    std::cout << cycle.size() << "\n";
+    for(int &x : cycle)
+    {
+        std::cout << x << " ";
+    }
+    
+    std::cout << "\n";
 }
 
 void fastIO()
