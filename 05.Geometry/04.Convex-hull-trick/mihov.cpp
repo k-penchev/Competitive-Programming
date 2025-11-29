@@ -48,7 +48,6 @@ struct CHT_MIN
     
     void push(Line x)
     {
-        x.from = -MAX_X;
         while (hull.size() && hull.back().at(hull.back().from) > x.at(hull.back().from))
         {
             hull.pop_back();
