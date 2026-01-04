@@ -8,6 +8,7 @@ const int MAXN = 1e5 + 10;
 
 auto SEED = std::chrono::steady_clock::now().time_since_epoch().count();
 std::mt19937 rng(SEED);
+//std::mt19937 rng(696969);
 
 int n;
 int a[MAXN];
