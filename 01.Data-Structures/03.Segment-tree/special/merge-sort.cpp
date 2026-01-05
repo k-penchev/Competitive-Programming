@@ -3,7 +3,7 @@
     - Find number of smaller (bigger) elements than X in [L, R]
     - Find the largest (smallest) element, which is smaller (bigger) than X in [L, R] 
     - Find how many elements are in the range [X, Y] in [L, R]
-    - Find the k-th smallest (biggest) element
+    - Find the k-th smallest (biggest) element in [L, R]
 
     Advanced:
     - Inside each Node of the MST we can store:
