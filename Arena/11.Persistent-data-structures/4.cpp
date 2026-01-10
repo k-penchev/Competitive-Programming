@@ -144,9 +144,9 @@ struct PersistentSegmentTree
         return newRoot;
     }
 
-    int query(RootNodes nodes, int k)
+    int query(int a, int b, int lca, int parLca, int k)
     {
-        return descent(nodes, 1, n, k);
+        return descent({a, b, lca, parLca}, 1, n, k);
     }
 };
 
@@ -243,7 +243,7 @@ void solve()
         std::cin >> a >> b >> k;
         
         int lca = findLca(a, b);
-        std::cout << rev[tree.query({root[a], root[b], root[lca], root[jump[lca][0]]}, k)] << "\n";
+        std::cout << rev[tree.query(root[a], root[b], root[lca], root[jump[lca][0]], k)] << "\n";
     }
 }
 
