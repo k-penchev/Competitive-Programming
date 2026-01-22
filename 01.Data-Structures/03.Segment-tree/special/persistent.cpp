@@ -127,8 +127,9 @@ void solve()
         std::cin >> a[i];
     }
 
-    version = 1;
-    root[1] = tree.build(a);
+    root[++version] = tree.build(a);
+    root[++version] = tree.update(root[1], +10, 3);
+    root[++version] = tree.update(root[1], +15, 4);
 }
 
 void fastIO()

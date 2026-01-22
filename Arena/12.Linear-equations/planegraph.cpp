@@ -4,7 +4,17 @@
 
 void solve()
 {
-    
+    std::cin >> f >> mod;
+
+    for(int i = 1 ; i <= f ; ++i)
+    {
+        std::cin >> k;
+        
+        for(int i = 1 ; i <= k ; ++i)
+        {
+            
+        }
+    }
 }
 
 void fastIO()

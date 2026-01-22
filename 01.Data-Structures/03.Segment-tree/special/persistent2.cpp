@@ -1,3 +1,14 @@
+/*
+    Applications:
+    - Find number of smaller (bigger) elements than X in [L, R]
+    - Find the largest (smallest) element, which is smaller (bigger) than X in [L, R] 
+    - Find how many elements are in the range [X, Y] in [L, R]
+    - Find the k-th smallest (biggest) element in [L, R]
+
+    PST has the same applications as MST.
+    Note: PST -> O(log N) , MST -> O(log^2 N)
+*/
+
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -90,10 +101,11 @@ struct PersistentSegmentTree
         return descent(tree[nodeFirst].right, tree[nodeSecond].right, mid + 1, r, k - (tree[tree[nodeSecond].left].sum - tree[tree[nodeFirst].left].sum));
     }
 
-    void build()
+    int build()
     {
         cnt = 1;
         build(1, 1, n);
+        return 1;
     }
 
     int update(int oldNode, int queryPos, int queryVal)
@@ -103,7 +115,7 @@ struct PersistentSegmentTree
         return newNode;
     }
 
-    int descent(int nodeFirst, int nodeSecond, int k)
+    int kth(int nodeFirst, int nodeSecond, int k)
     {
         return descent(nodeFirst, nodeSecond, 1, n, k);
     }
@@ -137,8 +149,7 @@ void solve()
         }
     }
     
-    root[0] = 1;
-    tree.build();
+    root[0] = tree.build();
     for(int i = 1 ; i <= n ; ++i)
     {
         root[i] = tree.update(root[i - 1], map[a[i]], +1);
@@ -148,7 +159,7 @@ void solve()
     {
         int l, r, k;
         std::cin >> l >> r >> k;
-        std::cout << rev[tree.descent(root[l - 1], root[r], k)] << "\n";
+        std::cout << rev[tree.kth(root[l - 1], root[r], k)] << "\n";
     }
 }
 
