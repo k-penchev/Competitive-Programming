@@ -18,8 +18,6 @@ void dfs(int node, int par)
 
         dfs(child, node);
 
-        // child -> node
-
         if(cnt[node].size() < cnt[child].size())
         {
             swap(cnt[node], cnt[child]);
