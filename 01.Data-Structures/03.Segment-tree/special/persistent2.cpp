@@ -12,27 +12,27 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 typedef long long llong;
 const int MAXN = 100000 + 10;
 const int MAXLOG = 25;
+const int INF = 1e9 + 10;
 
-int n, q;
-int a[MAXN];
-int b[MAXN];
-
+int n, m;
 struct PersistentSegmentTree
 {
     struct Node
     {
         int sum;
-        int left, right;
+        int left;
+        int right;
 
         Node()
         {
             sum = 0;
-            left = right = 0;
+            left = 0;
+            right = 0;
         }
 
         void assign(const Node &left, const Node &right)
@@ -41,8 +41,8 @@ struct PersistentSegmentTree
         }
     };
 
-    Node tree[MAXN * MAXLOG];
     int cnt;
+    Node tree[MAXLOG * MAXN];
 
     void build(int node, int l, int r)
     {
@@ -80,12 +80,12 @@ struct PersistentSegmentTree
         {
             tree[newNode].right = ++cnt;
             update(tree[newNode].right, tree[oldNode].right, mid + 1, r, queryPos, queryVal);
-        }   
+        }
 
         tree[newNode].assign(tree[tree[newNode].left], tree[tree[newNode].right]);
     }
 
-    int descent(int nodeFirst, int nodeSecond, int l, int r, int k)
+    int descent(int firstNode, int secondNode, int l, int r, int k)
     {
         if(l == r)
         {
@@ -93,13 +93,14 @@ struct PersistentSegmentTree
         }
 
         int mid = l + r >> 1;
-        if(tree[tree[nodeSecond].left].sum - tree[tree[nodeFirst].left].sum >= k)
+        if(tree[tree[secondNode].left].sum - tree[tree[firstNode].left].sum >= k)
         {
-            return descent(tree[nodeFirst].left, tree[nodeSecond].left, l, mid, k);
+            return descent(tree[firstNode].left, tree[secondNode].left, l, mid, k);
         }
 
-        return descent(tree[nodeFirst].right, tree[nodeSecond].right, mid + 1, r, k - (tree[tree[nodeSecond].left].sum - tree[tree[nodeFirst].left].sum));
+        return descent(tree[firstNode].right, tree[secondNode].right, mid + 1, r, k - (tree[tree[secondNode].left].sum - tree[tree[firstNode].left].sum));
     }
+    
 
     int build()
     {
@@ -108,54 +109,51 @@ struct PersistentSegmentTree
         return 1;
     }
 
-    int update(int oldNode, int queryPos, int queryVal)
+    int update(int oldRoot, int queryPos, int queryVal)
     {
-        int newNode = ++cnt;
-        update(newNode, oldNode, 1, n, queryPos, queryVal);
-        return newNode;
+        int newRoot = ++cnt;
+        update(newRoot, oldRoot, 1, n, queryPos, queryVal);
+        return newRoot;
     }
 
-    int kth(int nodeFirst, int nodeSecond, int k)
+    int kth(int firstRoot, int secondRoot, int k)
     {
-        return descent(nodeFirst, nodeSecond, 1, n, k);
+        return descent(firstRoot, secondRoot, 1, n, k);
     }
 };
 
-int root[MAXN];
+int a[MAXN];
+int b[MAXN];
+std::map<int, int> map;
+std::map<int, int> rev;
 PersistentSegmentTree tree;
-std::unordered_map<int, int> map;
-std::unordered_map<int, int> rev;
+int root[MAXN];
 
 void solve()
 {
-    std::cin >> n >> q;
-
+    std::cin >> n >> m;
     for(int i = 1 ; i <= n ; ++i)
     {
         std::cin >> a[i];
         b[i] = a[i];
     }
 
-    int value = 1;
+    int cnt = 1;
     std::sort(b + 1, b + n + 1);
     for(int i = 1 ; i <= n ; ++i)
     {
-        map[b[i]] = value;
-        rev[value] = b[i];
-
-        if(i != n && b[i] != b[i + 1])
-        {
-            value += 1;
-        }
+        map[b[i]] = cnt;
+        rev[cnt] = b[i];
+        if(i != n && b[i] != b[i + 1]) cnt += 1;
     }
-    
+
     root[0] = tree.build();
     for(int i = 1 ; i <= n ; ++i)
     {
         root[i] = tree.update(root[i - 1], map[a[i]], +1);
     }
 
-    for(int i = 1 ; i <= q ; ++i)
+    for(int i = 1 ; i <= m ; ++i)
     {
         int l, r, k;
         std::cin >> l >> r >> k;
@@ -174,4 +172,5 @@ int main()
 {
     fastIO();
     solve();
+    return 0;
 }
