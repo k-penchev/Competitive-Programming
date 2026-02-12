@@ -2,15 +2,18 @@
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 4 * 1e4 + 10;
+#define int long long
 
-int t, n;
-long long a[MAXN];
-long long prefix[MAXN];
+const int MAXN = 20000 + 10;
+const int INF = 1e9 + 10;
 
-bool check(int blockL, int blockR, int split)
+int n;
+int a[MAXN];
+int prefix[MAXN];
+
+bool check(int l, int r, int split)
 {
-    return ((prefix[split] - prefix[blockL - 1]) <= ((prefix[blockR] - prefix[blockL - 1]) / 2));
+    return prefix[split] - prefix[l - 1] <= (prefix[r] - prefix[l - 1]) / 2;
 }
 
 int divide(int l, int r)
@@ -18,23 +21,22 @@ int divide(int l, int r)
     if(l >= r)
     {
         return 0;
-    };
+    }
 
     if(((prefix[r] - prefix[l - 1]) % 2) != 0)
     {
         return 0;
-    } 
-    
-    int lPtr = l, rPtr = r;
-    while(lPtr + 1 < rPtr)
-    {
-        int binary_mid = (lPtr + rPtr) / 2;
-
-        if(check(l, r, binary_mid)) lPtr = binary_mid;
-        else rPtr = binary_mid;
     }
 
-    if((prefix[lPtr] - prefix[l - 1]) != ((prefix[r] - prefix[l - 1]) / 2))
+    int lPtr = l, rPtr = r, mid;
+    while(lPtr + 1 < rPtr)
+    {
+        int mid = lPtr + rPtr >> 1;
+        if(check(l, r, mid)) lPtr = mid;
+        else rPtr = mid;
+    }
+
+    if(prefix[lPtr] - prefix[l - 1] != (prefix[r] - prefix[l - 1]) / 2)
     {
         return 0;
     }
@@ -42,26 +44,25 @@ int divide(int l, int r)
     return 1 + std::max(divide(l, lPtr), divide(lPtr + 1, r));
 }
 
+int tests;
 void solve()
 {
-    std::cin >> t;
-
-    for(int i = 1 ; i <= t ; ++i)
+    std::cin >> tests;
+    while(tests--)
     {
         std::cin >> n;
-
-        for(int j = 1 ; j <= n ; ++j)
+        for(int i = 1 ; i <= n ; ++i)
         {
-            std::cin >> a[j];
+            std::cin >> a[i];
         }
 
         prefix[1] = a[1];
-        for(int j = 2 ; j <= n ; ++j)
+        for(int i = 2 ; i <= n ; ++i)
         {
-            prefix[j] = prefix[j - 1] + a[j];
+            prefix[i] = prefix[i - 1] + a[i];
         }
-        
-        std::cout << divide(1, n) << "\n"; 
+
+        std::cout << divide(1, n) << "\n";
     }
 }
 
@@ -76,6 +77,5 @@ signed main()
 {
     fastIO();
     solve();
-    
     return 0;
 }
