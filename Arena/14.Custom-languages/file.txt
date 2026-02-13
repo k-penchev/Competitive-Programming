@@ -1,0 +1,28 @@
+registers zero
+
+jeq zero zero loop1
+
+loop1:
+    jeq X Out end1
+    jeq zero zero gotoInc
+
+    gotoInc:
+    inc Out
+
+    jeq zero zero loop1
+
+end1:
+
+jeq zero zero loop2
+
+loop2:
+    jeq X zero end2
+    jeq zero zero gotoSub
+
+    gotoSub:
+    dec X
+
+    jeq zero zero loop2
+
+end2:
+

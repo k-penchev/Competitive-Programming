@@ -1,85 +1,62 @@
-#include <bits/stdc++.h>
-
-using namespace std;
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
 #define int long long
 
-const int MAXN = 2 * 1e5 + 10;
+const int MAXN = 200000 + 10;
+const int INF = 1e9 + 10;
 
 int n, q;
-int val[MAXN];
-vector<vector<int>> tree(MAXN);
-
 struct SegmentTree
 {
-    int seg[4 * MAXN];
+    int tree[4 * MAXN];
 
-    void build(int idx, int low, int high, vector<int>& v)
+    void build(int node, int l, int r, int arr[])
     {
-        if(low == high)
+        if(l == r)
         {
-            seg[idx] = v[low];
+            tree[node] = arr[l];
             return;
         }
 
-        int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
-
-        build(left, low, mid, v);
-        build(right, mid + 1, high, v);
-
-        seg[idx] = seg[left] + seg[right];
+        int mid = l + r >> 1;
+        build(2*node, l, mid, arr);
+        build(2*node + 1, mid + 1, r, arr);
+        tree[node] = tree[2*node] + tree[2*node + 1];
     }
 
-    void update(int idx, int low, int high, int pos, int val)
+    void update(int node, int l, int r, int pos, int val)
     {
-        if(low == high)
+        if(l == r)
         {
-            seg[idx] = val;
+            tree[node] = val;
             return;
         }
 
-        int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
-
-        if(pos <= mid)
-        {
-            update(left, low, mid, pos, val);
-        }
-        else
-        {
-            update(right, mid + 1, high, pos, val);
-        }
-
-        seg[idx] = seg[left] + seg[right];
+        int mid = l + r >> 1;
+        if(pos <= mid) update(2*node, l, mid, pos, val);
+        else update(2*node + 1, mid + 1, r, pos, val);
+        tree[node] = tree[2*node] + tree[2*node + 1];
     }
 
-    int query(int idx, int low, int high, int queryL, int queryR)
+    int query(int node, int l, int r, int queryL, int queryR)
     {
-        if(queryL > high || queryR < low)
+        if(queryL <= l && r <= queryR)
         {
-            return 0;
-        }
-        else if(queryL <= low && high <= queryR)
-        {
-            return seg[idx];
+            return tree[node];
         }
 
-        int mid = (low + high) / 2;
-        int left = 2 * idx;
-        int right = 2 * idx + 1;
-
-        int le = query(left, low, mid, queryL, queryR);
-        int ri = query(right, mid + 1, high, queryL, queryR);
-
-        return le + ri;
+        int res = 0;
+        int mid = l + r >> 1;
+        if(queryL <= mid) res += query(2*node, l, mid, queryL, queryR);
+        if(mid + 1 <= queryR) res += query(2*node + 1, mid + 1, r, queryL, queryR);
+        return res;
     }
 
-    void build(vector<int>& v)
+    void build(int arr[])
     {
-        build(1, 1, n, v);
+        build(1, 1, n, arr);
     }
 
     void update(int pos, int val)
@@ -93,21 +70,21 @@ struct SegmentTree
     }
 };
 
-SegmentTree seg;
+int timer;
+int a[MAXN];
+int in[MAXN];
+int out[MAXN];
+int flat[MAXN];
+SegmentTree tree;
+std::vector<int> g[MAXN];
 
-int timer = 0;
-int in[MAXN], out[MAXN];
-//vector<int> tour;
-
-void build_euler(int node, int par)
+void euler(int node, int par)
 {
     in[node] = ++timer;
-    //tour.push_back(node);
-
-    for(const int& to : tree[node])
+    for(const int &to : g[node])
     {
         if(to == par) continue;
-        build_euler(to, node);
+        euler(to, node);
     }
 
     out[node] = timer;
@@ -115,61 +92,55 @@ void build_euler(int node, int par)
 
 void solve()
 {
-    cin >> n >> q;
-
+    std::cin >> n >> q;
     for(int i = 1 ; i <= n ; ++i)
     {
-        cin >> val[i];
+        std::cin >> a[i];
     }
 
     for(int i = 1 ; i <= n - 1 ; ++i)
     {
-        int x, y;
-        cin >> x >> y;
-
-        tree[x].push_back(y);
-        tree[y].push_back(x);
+        int u, v;
+        std::cin >> u >> v;
+        g[u].push_back(v);
+        g[v].push_back(u);
     }
 
-    build_euler(1, 0);
-
-    vector<int> flat(n + 1);
-
-    for (int u = 1; u <= n; ++u)
+    euler(1, 0);
+    for(int i = 1 ; i <= n ; ++i)
     {
-        flat[in[u]] = val[u];   
+        flat[in[i]] = a[i];
     }
 
-    seg.build(flat);
-
-    for(int qq = 1 ; qq <= q ; ++qq)
+    tree.build(flat);
+    for(int i = 1 ; i <= q ; ++i)
     {
-        int qType, x, y;
-        cin >> qType;
+        int type, x, y;
+        std::cin >> type;
 
-        if(qType == 1)
+        if(type == 1)
         {
-            cin >> x >> y;
-            seg.update(in[x], y);
+            std::cin >> x >> y;
+            tree.update(in[x], y);
         }
         else
         {
-            cin >> x;
-            cout << seg.query(in[x], out[x]) << "\n";
+            std::cin >> x;
+            std::cout << tree.query(in[x], out[x]) << "\n";
         }
-
     }
 }
 
 void fastIO()
 {
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
 }
 
 signed main()
 {
     fastIO();
     solve();
+    return 0;
 }
