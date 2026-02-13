@@ -18,6 +18,5 @@ int main()
 {
     fastIO();
     solve();
-    
     return 0;
 }
