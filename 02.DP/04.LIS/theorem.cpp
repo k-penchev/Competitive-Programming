@@ -32,11 +32,6 @@ void solve()
       3) X = strictly decreasing (>)     -> Y = LNDS      (longest non-decreasing)
       4) X = strictly increasing (<)     -> Y = LNIS      (longest non-increasing)
 
-    Notes:
-      • “Strict” uses < or >; “non-strict” uses <= or >=.
-      • For implementation, lengths can be found in O(n log n) via patience sorting:
-        - strict LIS/LDS: use lower_bound; for LDS, apply to -a[i].
-        - non-strict variants: use upper_bound (or adjust ties carefully).
     */
 }
 
