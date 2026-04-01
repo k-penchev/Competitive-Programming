@@ -2,147 +2,121 @@
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100000 + 10;
+typedef long long llong;
+const int MAXN = 200000 + 10;
 const int INF = 1e9 + 10;
 const int MAXLOG = 20;
 
 int n, q;
-struct SegmentTree
+namespace SegmentTree
 {
-    struct Node
+    int tree[4 * MAXN];
+
+    void build(int node, int l, int r, int v[])
     {
-        int max;
-        int lazy; 
-    
-        Node()
+        if(l == r)
         {
-            max = 0;
-            lazy = 0;
-        }
-    };
-
-    Node tree[4 * MAXN];
-
-    void push(int node, int l, int r)
-    {
-        if(!tree[node].lazy)
-        {
-            return;
-        }
-
-        tree[node].max += tree[node].lazy;
-
-        if(l != r)
-        {
-            tree[2*node].lazy += tree[node].lazy;
-            tree[2*node + 1].lazy += tree[node].lazy;
-        }
-
-        tree[node].lazy = 0;
-    }
-
-    void update(int node, int l, int r, int queryL, int queryR, int queryVal)
-    {
-        push(node, l, r);
-        if(r < queryL || l > queryR)
-        {
-            return;
-        }
-
-        if(queryL <= l && r <= queryR)
-        {
-            tree[node].lazy += queryVal;
-            push(node, l, r);
+            tree[node] = v[l];
             return;
         }
 
         int mid = l + r >> 1;
-        update(2*node, l, mid, queryL, queryR, queryVal);
-        update(2*node + 1, mid + 1, r, queryL, queryR, queryVal);
-        tree[node].max = std::max(tree[2*node].max, tree[2*node + 1].max);
+        build(2*node, l, mid, v);
+        build(2*node + 1, mid + 1, r, v);
+        tree[node] = std::max(tree[2*node], tree[2*node + 1]);
+    }
+
+    void update(int node, int l, int r, int queryPos, int queryVal)
+    {
+        if(l == r)
+        {
+            tree[node] = queryVal;
+            return;
+        }
+
+        int mid = l + r >> 1;
+        if(queryPos <= mid) update(2*node, l, mid, queryPos, queryVal);
+        else update(2*node + 1, mid + 1, r, queryPos, queryVal);
+        tree[node] = std::max(tree[2*node], tree[2*node + 1]);
     }
 
     int query(int node, int l, int r, int queryL, int queryR)
     {
-        push(node, l, r);
-        if(r < queryL || l > queryR)
-        {
-            return -INF;
-        }
-
         if(queryL <= l && r <= queryR)
         {
-            return tree[node].max;
+            return tree[node];
         }
 
         int res = -INF;
         int mid = l + r >> 1;
-        res = std::max(res, query(2*node, l, mid, queryL, queryR));
-        res = std::max(res, query(2*node + 1, mid + 1, r, queryL, queryR));
+        if(queryL <= mid) res = std::max(res, query(2*node, l, mid, queryL, queryR));
+        if(mid + 1 <= queryR) res = std::max(res, query(2*node + 1, mid + 1, r, queryL, queryR));
         return res;
-    }
-
-    void update(int l, int r, int val)
-    {
-        update(1, 1, n, l, r, val);
-    }
-
-    int query(int l, int r)
-    {
-        return query(1, 1, n, l, r);
     }
 };
 
-SegmentTree tree;
-std::vector<int> g[MAXN];
+int label[MAXN];
+std::vector<int> tree[MAXN];
 
 namespace HLD
 {
-    int cnt = 1;
+    int cnt;
     int id[MAXN];
     int top[MAXN];
-    int size[MAXN];
     int depth[MAXN];
     int parent[MAXN];
-    
-    void dfs(int node, int par, int dep)
+    int size[MAXN];
+    int flat[MAXN];
+
+    void dfs(int node, int par, int dp)
     {
         size[node] = 1;
-        depth[node] = dep;
+        depth[node] = dp;
         parent[node] = par;
 
-        for(const int &to : g[node])
+        for(const int &to : tree[node])
         {
-            if(to == par) continue;
-            dfs(to, node, dep + 1);
+            if(to == par)
+            {
+                continue;
+            }
+
+            dfs(to, node, dp + 1);
             size[node] += size[to];
         }
     }
 
     void decompose(int node, int par, int head)
     {
-        id[node] = cnt++;
+        id[node] = ++cnt;
         top[node] = head;
 
         int heavy = -1;
-        int heavySize = -1;
-        for(const int &to : g[node])
+        int heavysize = -1;
+        for(const int &to : tree[node])
         {
-            if(to == par) continue;
+            if(to == par)
+            {
+                continue;
+            }
 
-            if(size[to] > heavySize)
+            if(size[to] > heavysize)
             {
                 heavy = to;
-                heavySize = size[to];
+                heavysize = size[to];
             }
         }
 
         if(heavy == -1) return;
         decompose(heavy, node, head);
 
-        for(const int &to : g[node])
+        for(const int &to : tree[node])
         {
-            if(to == par || to == heavy) continue;
+            if(to == par || to == heavy)
+            {
+                continue;
+            }
+
             decompose(to, node, to);
         }
     }
@@ -151,57 +125,68 @@ namespace HLD
     {
         dfs(1, 0, 0);
         decompose(1, 0, 1);
+
+        for(int i = 1 ; i <= n ; ++i)
+        {
+            flat[id[i]] = label[i];
+        }
+
+        SegmentTree::build(1, 1, n, flat);
     }
 
     void update(int node, int val)
     {
-        tree.update(id[node], id[node] + size[node] - 1, val);
+        SegmentTree::update(1, 1, n, id[node], val);
     }
 
-    int query(int a, int b)
+    int query(int u, int v)
     {
         int res = -INF;
-
-        while(top[a] != top[b])
+        while(top[u] != top[v])
         {
-            if(depth[top[a]] < depth[top[b]]) std::swap(a, b);
-            res = std::max(res, tree.query(id[top[a]], id[a]));
-            a = parent[top[a]];
+            if(depth[top[u]] < depth[top[v]]) std::swap(u, v);
+            res = std::max(res, SegmentTree::query(1, 1, n, id[top[u]], id[u]));
+            u = parent[top[u]];
         }
 
-        if(depth[a] > depth[b]) std::swap(a, b);
-        res = std::max(res, tree.query(id[a], id[b]));
-        return res == -INF ? 0 : res;
+        if(depth[u] > depth[v]) std::swap(u, v);
+        res = std::max(res, SegmentTree::query(1, 1, n, id[u], id[v]));
+        return res;
     }
 };
 
 void solve()
 {
-    std::cin >> n;
-    for(int i = 1 ; i <= n - 1 ; ++i)
+    std::cin >> n >> q;
+    for(int i = 1 ; i <= n ; ++i)
     {
-        int a, b;
-        std::cin >> a >> b;
-        g[a].push_back(b);
-        g[b].push_back(a);
+        std::cin >> label[i];
     }
 
+    for(int i = 1 ; i <= n - 1 ; ++i)
+    {
+        int u, v; std::cin >> u >> v;
+        tree[u].push_back(v);
+        tree[v].push_back(u);
+    }   
+
     HLD::build();
-    std::cin >> q;
     for(int i = 1 ; i <= q ; ++i)
     {
-        std::string type; int x, y;
+        int type, x, y;
         std::cin >> type >> x >> y;
 
-        if(type == "add")
+        if(type == 1)
         {
             HLD::update(x, y);
         }
         else
         {
-            std::cout << HLD::query(x, y) << "\n";
+            std::cout << HLD::query(x, y) << " ";
         }
     }
+
+    std::cout << "\n";
 }
 
 void fastIO()

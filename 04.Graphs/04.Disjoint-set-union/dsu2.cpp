@@ -36,7 +36,7 @@ struct DSU
             return x;
         }
 
-        // !!without path compression
+        //without path compression
         return find(parent[x]);
     }
 
