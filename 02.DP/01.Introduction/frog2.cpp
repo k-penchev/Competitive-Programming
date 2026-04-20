@@ -18,7 +18,6 @@ int f(int idx)
     if(memo[idx]) return dp[idx];
 
     memo[idx] = 1;
-
     for(int j = 1 ; j <= k ; ++j)
     {
         if(idx - j < 1) break;

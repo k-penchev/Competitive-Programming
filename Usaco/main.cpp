@@ -1,6 +1,13 @@
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+#include <cassert>
+#include <numeric>
+#include <random>
 #include <vector>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
 
 void solve()
 {
